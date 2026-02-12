@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>企业政策查询</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #f5f7fa;
+  color: #333;
+  min-height: 100vh;
+}
+
+/* 顶部栏 */
+.header {
+  background: linear-gradient(135deg, #1a73e8, #0d47a1);
+  color: #fff;
+  padding: 16px 20px;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.container { padding: 16px; max-width: 480px; margin: 0 auto; }
+
+/* 步骤指示器 */
+.steps {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px 0;
+  align-items: center;
+}
+.step-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: #ddd;
+  color: #999;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 600;
+  transition: all 0.3s;
+}
+.step-dot.active { background: #1a73e8; color: #fff; }
+.step-dot.done { background: #34a853; color: #fff; }
+.step-line { width: 32px; height: 2px; background: #ddd; }
+.step-line.done { background: #34a853; }
+
+/* 卡片 */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a73e8;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 输入框 */
+.input-group { margin-bottom: 16px; }
+.input-group label {
+  display: block;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 6px;
+}
+.input-group input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  transition: border 0.2s;
+}
+.input-group input:focus { border-color: #1a73e8; }
+
+/* 按钮 */
+.btn {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn:active { opacity: 0.8; }
+.btn-primary { background: #1a73e8; color: #fff; }
+.btn-success { background: #34a853; color: #fff; }
+.btn-outline {
+  background: #fff;
+  color: #1a73e8;
+  border: 1.5px solid #1a73e8;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* 公司信息 */
+.info-table { width: 100%; }
+.info-row {
+  display: flex;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+.info-row:last-child { border-bottom: none; }
+.info-label {
+  width: 80px;
+  flex-shrink: 0;
+  color: #999;
+}
+.info-value {
+  flex: 1;
+  color: #333;
+  word-break: break-all;
+}
+
+/* 政策列表 */
+.policy-item {
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.policy-item:last-child { border-bottom: none; }
+.policy-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+.policy-meta {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 6px;
+}
+.policy-summary {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.policy-links a {
+  display: inline-block;
+  font-size: 13px;
+  color: #1a73e8;
+  text-decoration: none;
+  margin-right: 16px;
+  padding: 4px 0;
+}
+
+/* 加载动画 */
+.loading {
+  text-align: center;
+  padding: 40px 0;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #1a73e8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-size: 14px;
+  color: #999;
+}
+
+/* 搜索日志 */
+.log-area {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.8;
+}
+
+/* 隐藏 */
+.hidden { display: none !important; }
+
+/* 空状态 */
+.empty {
+  text-align: center;
+  padding: 30px 0;
+  color: #999;
+  font-size: 14px;
+}
+
+/* tag */
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: 6px;
+}
+.tag-gov { background: #e8f0fe; color: #1a73e8; }
+.tag-wechat { background: #e6f9e8; color: #34a853; }
+.tag-other { background: #fef3e0; color: #f9a825; }
+</style>
+</head>
+<body>
+
+<div class="header">🏢 企业政策查询</div>
+
+<!-- 步骤指示器 -->
+<div class="container">
+  <div class="steps">
+    <div class="step-dot active" id="dot1">1</div>
+    <div class="step-line" id="line1"></div>
+    <div class="step-dot" id="dot2">2</div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-dot" id="dot3">3</div>
+  </div>
+</div>
+
+<!-- ========== 第一步：输入公司名 ========== -->
+<div class="container" id="step1">
+  <div class="card">
+    <div class="card-title">📝 输入公司名称</div>
+    <div class="input-group">
+      <label>公司全称</label>
+      <input type="text" id="companyInput" placeholder="请输入公司名称" value="上海聿凡领光通信有限公司">
+    </div>
+    <button class="btn btn-primary" onclick="queryCompany()">查询企业信息</button>
+  </div>
+</div>
+
+<!-- ========== 第二步：展示公司信息 ========== -->
+<div class="container hidden" id="step2">
+  <!-- 公司信息卡 -->
+  <div class="card">
+    <div class="card-title">🏢 企业基本信息</div>
+    <div class="info-table" id="companyInfo"></div>
+  </div>
+
+  <!-- 操作按钮 -->
+  <div class="card">
+    <div class="card-title">🔍 政策搜索</div>
+    <p style="font-size:13px; color:#666; margin-bottom:14px; line-height:1.5;">
+      根据企业所在区域、行业、规模，自动搜索匹配的政府奖励/扶持政策。
+    </p>
+    <button class="btn btn-success" onclick="startPolicySearch()">开始搜索政策</button>
+    <button class="btn btn-outline" style="margin-top:10px;" onclick="goBack()">← 重新查询</button>
+  </div>
+</div>
+
+<!-- ========== 第三步：政策搜索结果 ========== -->
+<div class="container hidden" id="step3">
+  <!-- 搜索中（spinner） -->
+  <div class="card" id="searchingCard">
+    <div class="loading">
+      <div class="spinner"></div>
+      <div class="loading-text" id="searchStatus">正在搜索政策...</div>
+    </div>
+  </div>
+
+  <!-- 搜索日志（始终可见） -->
+  <div class="card" id="logCard">
+    <div class="card-title" style="cursor:pointer;" onclick="toggleLog()">
+      📋 搜索日志
+      <span id="logToggle" style="font-size:12px; color:#999; font-weight:400; margin-left:auto;">▼</span>
+    </div>
+    <div class="log-area" id="searchLog" style="max-height:300px;"></div>
+  </div>
+
+  <!-- 结果 -->
+  <div class="card hidden" id="resultCard">
+    <div class="card-title">🎯 搜索结果 <span id="resultCount" style="font-size:12px; color:#999; font-weight:400;"></span></div>
+    <div id="policyList"></div>
+  </div>
+
+  <div class="hidden" id="resultActions" style="margin-bottom:20px;">
+    <button class="btn btn-outline" onclick="startPolicySearch()">🔄 重新搜索</button>
+    <button class="btn btn-outline" style="margin-top:10px;" onclick="goBack()">← 返回查询</button>
+  </div>
+</div>
+
+<script>
+// ──────────────────────────────────────
+// Mock 企查查数据
+// ──────────────────────────────────────
+const MOCK_COMPANIES = {
+  "上海聿凡领光通信有限公司": {
+    company_name: "上海聿凡领光通信有限公司",
+    legal_person: "张某",
+    registered_capital: "100万人民币",
+    established_date: "2023-11-23",
+    status: "存续",
+    registered_address: "上海市浦东新区",
+    district: "浦东新区",
+    industry: "光通信设备制造",
+    company_type: "有限责任公司（自然人投资或控股）",
+    scale: "小微企业",
+    business_scope: "光通信设备、光电子器件的研发、生产和销售；通信技术咨询；货物及技术的进出口业务",
+    social_credit_code: "91310115XXXXXXXXXX",
+    tags: ["小微企业", "光通信", "浦东新区", "科技型"]
+  }
+};
+
+// Mock 政策数据（模拟搜索结果）
+const MOCK_POLICIES = [
+  {
+    policy_title: "浦东新区促进集成电路和新一代通信产业高质量发展专项操作细则",
+    source: "浦东新区政府",
+    url: "https://www.pudong.gov.cn/zwgk/gfxwj-kjwzcwj/2024/299/333469.html",
+    pdf_url: "https://www.pudong.gov.cn/zwgk/gfxwj-kjwzcwj/2024/299/333469/a9967b3e5807430eabc4808077f07d69.pdf",
+    summary: "对光通信、集成电路等新一代信息通信领域的企业，给予研发投入补贴、产业化项目资助等支持，单个项目最高资助500万元。",
+    publish_date: "2024-06-15",
+    applicable: "光通信设备制造企业"
+  },
+  {
+    policy_title: "上海市小微企业创业担保贷款贴息及奖补实施办法",
+    source: "上海市人力资源和社会保障局",
+    url: "https://rsj.sh.gov.cn/txwjgzdt_17408/20240301/001.html",
+    pdf_url: "",
+    summary: "符合条件的小微企业可申请最高400万元的创业担保贷款，政府给予全额贴息。适用于成立5年内的小微企业。",
+    publish_date: "2024-03-01",
+    applicable: "小微企业"
+  },
+  {
+    policy_title: "浦东新区关于促进科技创新中心核心功能区建设的若干政策措施",
+    source: "浦东新区科经委",
+    url: "https://www.pudong.gov.cn/zwgk/gfxwj-kjwzcwj/2024/156/322890.html",
+    pdf_url: "",
+    summary: "对首次认定的高新技术企业给予一次性20万元奖励；对科技型中小企业研发费用加计扣除给予额外补贴。",
+    publish_date: "2024-04-20",
+    applicable: "科技型中小企业、高新技术企业"
+  },
+  {
+    policy_title: "上海市战略性新兴产业和先导产业发展专项资金管理办法",
+    source: "上海市经信委",
+    url: "https://jjxxw.sh.gov.cn/flfg/20240510/001.html",
+    pdf_url: "",
+    summary: "支持新一代信息技术（含光通信）产业发展。对符合条件的项目给予不超过项目总投资30%的资助，单个项目最高3000万元。",
+    publish_date: "2024-05-10",
+    applicable: "新一代信息技术企业"
+  },
+  {
+    policy_title: "浦东新区中小微企业政策性融资担保基金管理办法",
+    source: "浦东新区金融工作局",
+    url: "https://www.pudong.gov.cn/zwgk/gfxwj-zczjwj/2024/098/319560.html",
+    pdf_url: "",
+    summary: "为浦东新区注册的中小微企业提供最高1000万元的融资担保支持，担保费率不超过1%。",
+    publish_date: "2024-02-28",
+    applicable: "浦东新区中小微企业"
+  }
+];
+
+// ──────────────────────────────────────
+// 状态管理
+// ──────────────────────────────────────
+let currentCompany = null;
+
+function setStep(n) {
+  // 更新步骤指示器
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById('dot' + i);
+    dot.classList.remove('active', 'done');
+    if (i < n) dot.classList.add('done');
+    else if (i === n) dot.classList.add('active');
+  }
+  document.getElementById('line1').classList.toggle('done', n > 1);
+  document.getElementById('line2').classList.toggle('done', n > 2);
+
+  // 显示/隐藏面板
+  document.getElementById('step1').classList.toggle('hidden', n !== 1);
+  document.getElementById('step2').classList.toggle('hidden', n !== 2);
+  document.getElementById('step3').classList.toggle('hidden', n !== 3);
+}
+
+// ──────────────────────────────────────
+// 第一步：查询公司
+// ──────────────────────────────────────
+function queryCompany() {
+  const name = document.getElementById('companyInput').value.trim();
+  if (!name) { alert('请输入公司名称'); return; }
+
+  // Mock 查询（后续替换为企查查 API）
+  const data = MOCK_COMPANIES[name];
+  if (!data) {
+    alert('未找到该公司信息（当前为演示数据）');
+    return;
+  }
+
+  currentCompany = data;
+  renderCompanyInfo(data);
+  setStep(2);
+}
+
+function renderCompanyInfo(data) {
+  const fields = [
+    ['公司名称', data.company_name],
+    ['法定代表人', data.legal_person],
+    ['注册资本', data.registered_capital],
+    ['成立日期', data.established_date],
+    ['经营状态', data.status],
+    ['注册地址', data.registered_address],
+    ['所属行业', data.industry],
+    ['企业类型', data.company_type],
+    ['企业规模', data.scale],
+    ['经营范围', data.business_scope],
+  ];
+
+  const html = fields.map(([label, value]) =>
+    `<div class="info-row">
+      <div class="info-label">${label}</div>
+      <div class="info-value">${value || '-'}</div>
+    </div>`
+  ).join('');
+
+  document.getElementById('companyInfo').innerHTML = html;
+}
+
+// ──────────────────────────────────────
+// 第二步→第三步：搜索政策
+// ──────────────────────────────────────
+function startPolicySearch() {
+  setStep(3);
+  document.getElementById('searchingCard').classList.remove('hidden');
+  document.getElementById('resultCard').classList.add('hidden');
+  document.getElementById('resultActions').classList.add('hidden');
+
+  const log = document.getElementById('searchLog');
+  const status = document.getElementById('searchStatus');
+  log.innerHTML = '';
+
+  function ts() { return new Date().toLocaleTimeString('zh-CN', {hour12:false}); }
+  function addLog(msg) {
+    log.innerHTML += `<span style="color:#aaa">[${ts()}]</span> ${msg}\n`;
+    log.scrollTop = log.scrollHeight;
+  }
+
+  // 模拟搜索过程
+  const steps = [
+    { delay: 500,  text: '📡 正在连接搜索引擎...' },
+    { delay: 1500, text: `🔍 搜索: ${currentCompany.district} ${currentCompany.industry} 产业扶持政策 site:gov.cn` },
+    { delay: 2000, text: '  → 打开百度搜索...' },
+    { delay: 2500, text: '  → 找到 2 条政府网站结果' },
+    { delay: 3000, text: '  → 提取政策信息...' },
+    { delay: 3500, text: '📄 维度1完成: 找到 2 条行业政策' },
+    { delay: 4000, text: `🔍 搜索: 上海 ${currentCompany.scale} 扶持 补贴 site:gov.cn` },
+    { delay: 4500, text: '  → 打开百度搜索...' },
+    { delay: 5000, text: '  → 找到 1 条政府网站结果' },
+    { delay: 5500, text: '📄 维度2完成: 找到 1 条小微企业政策' },
+    { delay: 6000, text: `🔍 搜索: ${currentCompany.district} 科技创新 奖励 site:gov.cn` },
+    { delay: 6500, text: '  → 打开百度搜索...' },
+    { delay: 7000, text: '  → 找到 2 条政府网站结果' },
+    { delay: 7500, text: '📄 维度3完成: 找到 2 条科技创新政策' },
+    { delay: 8000, text: '🔗 去重合并结果...' },
+    { delay: 8500, text: '✅ 搜索完成，共找到 5 条相关政策' },
+  ];
+
+  steps.forEach(({ delay, text }) => {
+    setTimeout(() => {
+      addLog(text);
+      status.textContent = text.replace(/^ +→ /, '');
+    }, delay);
+  });
+
+  // 显示结果
+  setTimeout(() => {
+    document.getElementById('searchingCard').classList.add('hidden');
+    document.getElementById('resultCard').classList.remove('hidden');
+    document.getElementById('resultActions').classList.remove('hidden');
+    renderPolicies(MOCK_POLICIES);
+  }, 9000);
+}
+
+function renderPolicies(policies) {
+  document.getElementById('resultCount').textContent = `共 ${policies.length} 条`;
+
+  if (!policies.length) {
+    document.getElementById('policyList').innerHTML = '<div class="empty">暂未找到相关政策</div>';
+    return;
+  }
+
+  const html = policies.map((p, i) => {
+    const sourceTag = p.source.includes('区') ? 'tag-gov' :
+                      p.source.includes('微信') ? 'tag-wechat' : 'tag-other';
+    return `
+    <div class="policy-item">
+      <div class="policy-title">${i + 1}. ${p.policy_title}</div>
+      <div class="policy-meta">
+        <span class="tag ${sourceTag}">${p.source}</span>
+        ${p.publish_date ? '📅 ' + p.publish_date : ''}
+        ${p.applicable ? ' · 适用: ' + p.applicable : ''}
+      </div>
+      <div class="policy-summary">${p.summary}</div>
+      <div class="policy-links">
+        ${p.url ? `<a href="${p.url}" target="_blank">📄 原文链接</a>` : ''}
+        ${p.pdf_url ? `<a href="${p.pdf_url}" target="_blank">📥 PDF下载</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('policyList').innerHTML = html;
+}
+
+// ──────────────────────────────────────
+// 返回
+// ──────────────────────────────────────
+function goBack() {
+  setStep(1);
+}
+
+function toggleLog() {
+  const log = document.getElementById('searchLog');
+  const toggle = document.getElementById('logToggle');
+  if (log.style.display === 'none') {
+    log.style.display = '';
+    toggle.textContent = '▼';
+  } else {
+    log.style.display = 'none';
+    toggle.textContent = '▶';
+  }
+}
+</script>
+
+</body>
+</html>

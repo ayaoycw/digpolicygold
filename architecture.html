@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>政策顾问 AI — 系统架构</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #1a73e8 0%, #7c3aed 100%);
+  padding: 24px 20px;
+  text-align: center;
+}
+.header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.header p { font-size: 13px; opacity: 0.85; }
+
+.container { max-width: 520px; margin: 0 auto; padding: 16px; }
+
+/* Section */
+.section {
+  margin-bottom: 20px;
+}
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #58a6ff;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Orchestrator Box */
+.orchestrator {
+  background: linear-gradient(135deg, #161b22, #1c2333);
+  border: 1.5px solid #58a6ff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  position: relative;
+}
+.orchestrator::before {
+  content: "🧠 Orchestrator";
+  position: absolute;
+  top: -11px;
+  left: 16px;
+  background: #0d1117;
+  padding: 0 8px;
+  font-size: 12px;
+  color: #58a6ff;
+  font-weight: 600;
+}
+.think-bubble {
+  background: #1c2333;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  font-size: 13px;
+  color: #8b949e;
+  font-style: italic;
+}
+.think-bubble strong { color: #e6edf3; font-style: normal; }
+
+/* Loop Steps */
+.loop-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+.loop-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.loop-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #21262d;
+  border: 1px solid #58a6ff;
+  color: #58a6ff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Arrow Connector */
+.connector {
+  text-align: center;
+  padding: 8px 0;
+  color: #484f58;
+  font-size: 20px;
+}
+
+/* Worker Grid */
+.worker-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.worker-card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 14px 12px;
+  transition: border-color 0.2s;
+}
+.worker-card:active { border-color: #58a6ff; }
+.worker-icon { font-size: 24px; margin-bottom: 6px; }
+.worker-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.worker-tech { font-size: 11px; color: #8b949e; margin-bottom: 6px; }
+.worker-desc { font-size: 12px; color: #8b949e; line-height: 1.5; }
+.worker-card.search { border-left: 3px solid #3fb950; }
+.worker-card.deep { border-left: 3px solid #f0883e; }
+.worker-card.verify { border-left: 3px solid #d29922; }
+.worker-card.analyze { border-left: 3px solid #bc8cff; }
+
+/* Flow Demo */
+.flow-demo {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.flow-header {
+  background: #21262d;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.flow-header .play-btn {
+  background: #238636;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.flow-header .play-btn:active { opacity: 0.8; }
+.flow-body {
+  padding: 14px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.flow-round {
+  margin-bottom: 16px;
+  animation: fadeIn 0.5s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+.round-label {
+  font-size: 11px;
+  color: #58a6ff;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.round-think {
+  background: #1c2333;
+  border-left: 3px solid #58a6ff;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #8b949e;
+  border-radius: 0 6px 6px 0;
+}
+.round-action {
+  background: #0d2818;
+  border-left: 3px solid #3fb950;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #adbac7;
+  border-radius: 0 6px 6px 0;
+}
+.round-action.browser {
+  background: #2a1a00;
+  border-left-color: #f0883e;
+}
+.round-action.llm {
+  background: #1a0d2e;
+  border-left-color: #bc8cff;
+}
+.round-result {
+  background: #21262d;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #8b949e;
+  border-radius: 6px;
+}
+
+/* Decision Output */
+.decision-card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.decision-header {
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.decision-header.high { background: #0d2818; color: #3fb950; }
+.decision-header.medium { background: #2a1a00; color: #f0883e; }
+.decision-header.low { background: #21262d; color: #8b949e; }
+.decision-body { padding: 12px 14px; }
+.decision-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  margin-bottom: 4px;
+  color: #8b949e;
+}
+.match-icon { flex-shrink: 0; }
+
+/* Compare Table */
+.compare {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+.compare th {
+  background: #21262d;
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 600;
+  color: #8b949e;
+  border-bottom: 1px solid #30363d;
+}
+.compare td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #21262d;
+  color: #e6edf3;
+}
+.compare tr:last-child td { border-bottom: none; }
+.badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-fast { background: #0d2818; color: #3fb950; }
+.badge-slow { background: #2a1a00; color: #f0883e; }
+
+/* Action Plan */
+.timeline {
+  position: relative;
+  padding-left: 24px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: #30363d;
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 14px;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #58a6ff;
+  border: 2px solid #0d1117;
+}
+.timeline-item.done::before { background: #3fb950; }
+.timeline-label {
+  font-size: 11px;
+  color: #58a6ff;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.timeline-text { font-size: 13px; }
+.timeline-sub { font-size: 11px; color: #8b949e; }
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 11px;
+  color: #484f58;
+}
+
+/* Responsive tweaks */
+@media (max-width: 360px) {
+  .worker-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🏛️ 企业激励政策 AI 顾问</h1>
+  <p>Orchestrator Agent + Worker Agents 架构</p>
+</div>
+
+<!-- ========== 1. 架构总览 ========== -->
+<div class="container">
+
+<div class="section">
+  <div class="section-title">📐 系统架构</div>
+
+  <div class="orchestrator">
+    <div style="text-align:center; margin: 8px 0 12px;">
+      <div style="font-size:16px; font-weight:700;">大模型思考 + 决策循环</div>
+      <div style="font-size:12px; color:#8b949e;">每一轮自主决定下一步做什么</div>
+    </div>
+
+    <div class="think-bubble">
+      "我现在知道了什么？还缺什么信息？<br>下一步该做什么才能帮企业<strong>找到最优的激励政策</strong>？"
+    </div>
+
+    <div class="loop-steps">
+      <div class="loop-step"><div class="loop-num">1</div> 审视当前已有的企业信息 + 已找到的政策</div>
+      <div class="loop-step"><div class="loop-num">2</div> 思考：还需要什么信息才能做出申报建议？</div>
+      <div class="loop-step"><div class="loop-num">3</div> 选择一个 Worker 去执行具体任务</div>
+      <div class="loop-step"><div class="loop-num">4</div> 拿到结果，更新认知图谱</div>
+      <div class="loop-step"><div class="loop-num">5</div> 重复，直到能输出最终<strong>决策报告</strong></div>
+    </div>
+  </div>
+
+  <div class="connector">▼ ▼ ▼ ▼</div>
+
+  <div class="worker-grid">
+    <div class="worker-card search">
+      <div class="worker-icon">🔍</div>
+      <div class="worker-name">搜索 Worker</div>
+      <div class="worker-tech">requests + 百度</div>
+      <div class="worker-desc">快速搜索政策关键词，提取 gov.cn 链接和摘要。~5秒/维度</div>
+    </div>
+    <div class="worker-card deep">
+      <div class="worker-icon">🌐</div>
+      <div class="worker-name">深挖 Worker</div>
+      <div class="worker-tech">browser-use</div>
+      <div class="worker-desc">打开政策页面，提取申报条件、金额、截止日期、PDF附件</div>
+    </div>
+    <div class="worker-card verify">
+      <div class="worker-icon">✅</div>
+      <div class="worker-name">验证 Worker</div>
+      <div class="worker-tech">browser-use</div>
+      <div class="worker-desc">验证政策是否在申报期、条件细节确认、门户网站交互</div>
+    </div>
+    <div class="worker-card analyze">
+      <div class="worker-icon">🧠</div>
+      <div class="worker-name">分析 Worker</div>
+      <div class="worker-tech">LLM API</div>
+      <div class="worker-desc">匹配度分析、条件对照、ROI 排序、生成申报建议报告</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 2. 决策循环演示 ========== -->
+<div class="section">
+  <div class="section-title">🔄 决策循环演示</div>
+
+  <div class="flow-demo">
+    <div class="flow-header">
+      <span>Orchestrator 思考过程</span>
+      <button class="play-btn" onclick="playDemo()">▶ 演示</button>
+    </div>
+    <div class="flow-body" id="flowBody">
+      <!-- Round 1 -->
+      <div class="flow-round" id="r1" style="display:none;">
+        <div class="round-label">🔄 Round 1</div>
+        <div class="round-think">💭  收到企业信息：上海聿凡领光通信有限公司，浦东新区，光通信设备，小微企业。我需要先搜索行业相关的扶持政策。</div>
+        <div class="round-action">→ 调用<strong>搜索 Worker</strong>: "浦东新区 光通信 集成电路 产业扶持 site:gov.cn"</div>
+        <div class="round-result">📋 返回 8 条结果，其中 3 条来自 pudong.gov.cn，2 条来自 jjxxw.sh.gov.cn</div>
+      </div>
+
+      <!-- Round 2 -->
+      <div class="flow-round" id="r2" style="display:none;">
+        <div class="round-label">🔄 Round 2</div>
+        <div class="round-think">💭  找到"浦东新区集成电路和通信产业专项"，标题高度相关，金额可能很大。需要看详细的申报条件和截止日期。</div>
+        <div class="round-action browser">→ 调用<strong>深挖 Worker</strong>: 打开 pudong.gov.cn/zwgk/.../333469.html</div>
+        <div class="round-result">📋 提取到：最高500万、需注册浦东+通信行业+年营收≥1000万（初创期放宽至200万）、PDF附件已下载、申报截止 2026-06-30</div>
+      </div>
+
+      <!-- Round 3 -->
+      <div class="flow-round" id="r3" style="display:none;">
+        <div class="round-label">🔄 Round 3</div>
+        <div class="round-think">💭  这条政策有"初创期放宽"条款很重要。但还缺小微企业维度的政策。企业注册资本100万，应该有融资担保类支持。</div>
+        <div class="round-action">→ 调用<strong>搜索 Worker</strong>: "上海 小微企业 创业担保 贷款贴息 site:gov.cn"</div>
+        <div class="round-result">📋 返回 6 条结果，其中"小微企业创业担保贷款贴息办法"最相关</div>
+      </div>
+
+      <!-- Round 4 -->
+      <div class="flow-round" id="r4" style="display:none;">
+        <div class="round-label">🔄 Round 4</div>
+        <div class="round-think">💭  小微企业贷款贴息是常年政策，随时可申报。现在还缺科技创新维度——如果企业去申请高企认定，可以拿到一次性奖励。</div>
+        <div class="round-action">→ 调用<strong>搜索 Worker</strong>: "浦东新区 高新技术企业 首次认定 奖励 site:gov.cn"</div>
+        <div class="round-result">📋 找到"浦东新区高新技术企业认定奖励20万"政策</div>
+      </div>
+
+      <!-- Round 5 -->
+      <div class="flow-round" id="r5" style="display:none;">
+        <div class="round-label">🔄 Round 5</div>
+        <div class="round-think">💭  发现高企认定是很多后续政策的前置条件。企业现在还没认定，但成立已满2年可以申请。这是一个关键路径。让我确认一下高企认定的申报窗口。</div>
+        <div class="round-action browser">→ 调用<strong>验证 Worker</strong>: 访问上海科委网站，查 2026 年高企认定批次时间</div>
+        <div class="round-result">📋 2026年第一批高企认定：4月1日-5月15日，第二批：7月1日-8月15日</div>
+      </div>
+
+      <!-- Round 6 -->
+      <div class="flow-round" id="r6" style="display:none;">
+        <div class="round-label">🔄 Round 6</div>
+        <div class="round-think">💭  已收集 5 条高相关政策的详细信息。有行业专项(最高500万)、小微贷款(400万贴息)、高企奖励(20万)、科技创新补贴、融资担保。信息足够生成决策报告了。</div>
+        <div class="round-action llm">→ 调用<strong>分析 Worker</strong>: 综合企业画像 + 5 条政策详情，生成匹配度分析和行动计划</div>
+        <div class="round-result">📋 ✅ 生成最终决策报告</div>
+      </div>
+
+      <!-- Placeholder -->
+      <div id="flowPlaceholder" style="text-align:center; padding:30px 0; color:#484f58; font-size:13px;">
+        点击 ▶ 演示 查看 Orchestrator 决策过程
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 3. 决策报告示例 ========== -->
+<div class="section">
+  <div class="section-title">📊 输出：决策报告</div>
+
+  <div class="decision-card">
+    <div class="decision-header high">⭐⭐⭐ 浦东新区集成电路和通信产业专项</div>
+    <div class="decision-body">
+      <div class="decision-row"><span class="match-icon">✅</span> 注册在浦东新区</div>
+      <div class="decision-row"><span class="match-icon">✅</span> 光通信设备制造 — 属于新一代信息通信</div>
+      <div class="decision-row"><span class="match-icon">✅</span> 成立<3年 — 符合初创期放宽条件</div>
+      <div class="decision-row"><span class="match-icon">❓</span> 年营收≥200万（初创期标准）— 需确认</div>
+      <div style="margin-top:8px; font-size:12px;">
+        <span style="color:#3fb950;">💰 最高 500 万</span> ·
+        <span style="color:#f0883e;">📅 截止 2026-06-30</span> ·
+        <span style="color:#58a6ff;">📥 <a href="#" style="color:#58a6ff;">PDF原文</a></span>
+      </div>
+      <div style="margin-top:6px; font-size:12px; color:#3fb950;">
+        📌 建议：<strong>立即准备</strong>，优先级最高
+      </div>
+    </div>
+  </div>
+
+  <div class="decision-card">
+    <div class="decision-header high">⭐⭐⭐ 小微企业创业担保贷款贴息</div>
+    <div class="decision-body">
+      <div class="decision-row"><span class="match-icon">✅</span> 小微企业</div>
+      <div class="decision-row"><span class="match-icon">✅</span> 成立≤5年</div>
+      <div class="decision-row"><span class="match-icon">✅</span> 注册在上海</div>
+      <div style="margin-top:8px; font-size:12px;">
+        <span style="color:#3fb950;">💰 最高 400 万贷款全额贴息</span> ·
+        <span style="color:#d29922;">📅 常年受理</span>
+      </div>
+      <div style="margin-top:6px; font-size:12px; color:#3fb950;">
+        📌 建议：<strong>随时可报</strong>，申请简单，建议同步进行
+      </div>
+    </div>
+  </div>
+
+  <div class="decision-card">
+    <div class="decision-header medium">⭐⭐ 高新技术企业认定（前置）+ 奖励 20 万</div>
+    <div class="decision-body">
+      <div class="decision-row"><span class="match-icon">✅</span> 有自主研发产品</div>
+      <div class="decision-row"><span class="match-icon">❓</span> 知识产权≥1项 — 需确认是否已申请专利</div>
+      <div class="decision-row"><span class="match-icon">❓</span> 研发费用占比≥5% — 需财务确认</div>
+      <div style="margin-top:8px; font-size:12px;">
+        <span style="color:#3fb950;">💰 一次性 20 万 + 解锁后续政策</span> ·
+        <span style="color:#f0883e;">📅 第一批 4/1-5/15</span>
+      </div>
+      <div style="margin-top:6px; font-size:12px; color:#f0883e;">
+        📌 建议：<strong>关键路径</strong>，高企认定是多个大额政策的前置条件
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 4. 行动计划 ========== -->
+<div class="section">
+  <div class="section-title">📋 输出：行动计划</div>
+
+  <div style="background:#161b22; border:1px solid #30363d; border-radius:12px; padding:16px;">
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-label">📍 本月（2月）</div>
+        <div class="timeline-text">确认知识产权和财务数据</div>
+        <div class="timeline-sub">确认是否有专利/软著、上年度营收、研发费用占比</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-label">📍 3 月</div>
+        <div class="timeline-text">启动高企认定材料准备</div>
+        <div class="timeline-sub">如无专利，立即申请实用新型（3-6个月下证）</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-label">📍 4 月</div>
+        <div class="timeline-text">提交高企认定申请（第一批）</div>
+        <div class="timeline-sub">同步申请小微企业创业担保贷款贴息</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-label">📍 5-6 月</div>
+        <div class="timeline-text">准备浦东通信产业专项申报材料</div>
+        <div class="timeline-sub">截止 6/30，准备项目可行性报告+资金预算</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-label">📍 Q3-Q4</div>
+        <div class="timeline-text">高企认定通过后的后续政策</div>
+        <div class="timeline-sub">浦东高企奖励 20 万 + 解锁更多科技专项基金</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 5. 对比 ========== -->
+<div class="section">
+  <div class="section-title">⚡ 方案对比</div>
+
+  <table class="compare">
+    <tr>
+      <th></th>
+      <th>固定流水线</th>
+      <th>Orchestrator</th>
+    </tr>
+    <tr>
+      <td style="color:#8b949e;">搜索策略</td>
+      <td>固定 6 组关键词</td>
+      <td>动态调整，追问深挖</td>
+    </tr>
+    <tr>
+      <td style="color:#8b949e;">深挖决策</td>
+      <td>所有政策都深挖</td>
+      <td>只挖高匹配度的</td>
+    </tr>
+    <tr>
+      <td style="color:#8b949e;">终止条件</td>
+      <td>跑完就停</td>
+      <td>信息够了就停</td>
+    </tr>
+    <tr>
+      <td style="color:#8b949e;">发现能力</td>
+      <td>搜不到就没有</td>
+      <td>能追踪线索（如"初创期放宽"）</td>
+    </tr>
+    <tr>
+      <td style="color:#8b949e;">输出</td>
+      <td>政策列表</td>
+      <td><strong>决策报告 + 行动计划</strong></td>
+    </tr>
+    <tr>
+      <td style="color:#8b949e;">耗时</td>
+      <td><span class="badge badge-slow">~15min</span></td>
+      <td><span class="badge badge-fast">~3-5min</span></td>
+    </tr>
+  </table>
+</div>
+
+<!-- ========== 6. 技术栈 ========== -->
+<div class="section">
+  <div class="section-title">🛠 技术栈</div>
+
+  <div style="background:#161b22; border:1px solid #30363d; border-radius:12px; padding:16px; font-size:13px;">
+    <div style="margin-bottom:10px;">
+      <strong style="color:#58a6ff;">Orchestrator</strong>
+      <span style="color:#8b949e;">— Azure OpenAI (o3) Function Calling</span>
+    </div>
+    <div style="margin-bottom:10px;">
+      <strong style="color:#3fb950;">搜索 Worker</strong>
+      <span style="color:#8b949e;">— aiohttp + BeautifulSoup (百度搜索)</span>
+    </div>
+    <div style="margin-bottom:10px;">
+      <strong style="color:#f0883e;">深挖/验证 Worker</strong>
+      <span style="color:#8b949e;">— browser-use 0.11.9 + Chrome</span>
+    </div>
+    <div style="margin-bottom:10px;">
+      <strong style="color:#bc8cff;">分析 Worker</strong>
+      <span style="color:#8b949e;">— Azure OpenAI API (结构化输出)</span>
+    </div>
+    <div>
+      <strong style="color:#e6edf3;">前端</strong>
+      <span style="color:#8b949e;">— 纯静态 HTML + SSE 实时日志</span>
+    </div>
+  </div>
+</div>
+
+</div><!-- container -->
+
+<div class="footer">
+  Policy Advisor AI · Orchestrator Architecture v1.0
+</div>
+
+<script>
+let demoRunning = false;
+function playDemo() {
+  if (demoRunning) return;
+  demoRunning = true;
+
+  document.getElementById('flowPlaceholder').style.display = 'none';
+
+  const rounds = ['r1', 'r2', 'r3', 'r4', 'r5', 'r6'];
+  // Reset all
+  rounds.forEach(id => document.getElementById(id).style.display = 'none');
+
+  // Show one by one
+  rounds.forEach((id, i) => {
+    setTimeout(() => {
+      document.getElementById(id).style.display = 'block';
+      // Scroll into view
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (i === rounds.length - 1) {
+        setTimeout(() => { demoRunning = false; }, 1000);
+      }
+    }, i * 2000);
+  });
+}
+</script>
+
+</body>
+</html>
