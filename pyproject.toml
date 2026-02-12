@@ -6,4 +6,9 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "browser-use",
+    "azure-ai-projects",
+    "azure-identity",
+    "python-dotenv",
+    "fastapi",
+    "uvicorn",
 ]

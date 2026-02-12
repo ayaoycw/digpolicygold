@@ -215,11 +215,118 @@ body {
 .tag-gov { background: #e8f0fe; color: #1a73e8; }
 .tag-wechat { background: #e6f9e8; color: #34a853; }
 .tag-other { background: #fef3e0; color: #f9a825; }
+
+/* 政策链接区域 */
+.link-block {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: #f0f4ff;
+  border-radius: 6px;
+  border-left: 3px solid #1a73e8;
+}
+.link-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  line-height: 1.6;
+  word-break: break-all;
+}
+.link-row:last-child { margin-bottom: 0; }
+.link-row .link-label {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #333;
+  min-width: 70px;
+}
+.link-row a {
+  color: #1a73e8;
+  text-decoration: none;
+  word-break: break-all;
+}
+.link-row a:hover { text-decoration: underline; }
+.link-row .no-link {
+  color: #bbb;
+  font-style: italic;
+}
+
+/* 扶持内容 */
+.support-block {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #eef7ff;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1a73e8;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* 汇总表格 */
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 8px;
+}
+.summary-table th {
+  background: #f0f4ff;
+  padding: 8px 6px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #1a73e8;
+  font-size: 12px;
+}
+.summary-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: top;
+  line-height: 1.4;
+}
+.summary-table tr:hover { background: #fafbff; }
+.score-bar {
+  display: inline-block;
+  height: 8px;
+  border-radius: 4px;
+  background: #e0e0e0;
+  width: 60px;
+  position: relative;
+  vertical-align: middle;
+}
+.score-fill {
+  height: 100%;
+  border-radius: 4px;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.score-high { background: #34a853; }
+.score-mid  { background: #fbbc04; }
+.score-low  { background: #ea4335; }
+.layer-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.layer-基础层 { background: #e8f0fe; color: #1a73e8; }
+.layer-发展层 { background: #e6f9e8; color: #0d7a3f; }
+.layer-人才层 { background: #fef3e0; color: #e37400; }
+.layer-荣誉层 { background: #fce8e8; color: #c62828; }
+.validity-tag {
+  font-size: 11px;
+  color: #666;
+  white-space: nowrap;
+}
 </style>
 </head>
 <body>
 
-<div class="header">🏢 企业政策查询</div>
+<div class="header">🏢 企业政策查询 <span style="font-size:12px; opacity:0.7;">v0.14</span></div>
 
 <!-- 步骤指示器 -->
 <div class="container">
@@ -229,6 +336,8 @@ body {
     <div class="step-dot" id="dot2">2</div>
     <div class="step-line" id="line2"></div>
     <div class="step-dot" id="dot3">3</div>
+    <div class="step-line" id="line3"></div>
+    <div class="step-dot" id="dot4">4</div>
   </div>
 </div>
 
@@ -254,11 +363,11 @@ body {
 
   <!-- 操作按钮 -->
   <div class="card">
-    <div class="card-title">🔍 政策搜索</div>
+    <div class="card-title">🧠 智能搜索</div>
     <p style="font-size:13px; color:#666; margin-bottom:14px; line-height:1.5;">
-      根据企业所在区域、行业、规模，自动搜索匹配的政府奖励/扶持政策。
+      AI 分析企业信息，自动拆分多层搜索任务（基础层、发展层、人才层、荣誉层），智能匹配政府奖励/扶持政策。
     </p>
-    <button class="btn btn-success" onclick="startPolicySearch()">开始搜索政策</button>
+    <button class="btn btn-success" onclick="startPolicySearch()">🚀 开始智能搜索</button>
     <button class="btn btn-outline" style="margin-top:10px;" onclick="goBack()">← 重新查询</button>
   </div>
 </div>
@@ -289,7 +398,25 @@ body {
   </div>
 
   <div class="hidden" id="resultActions" style="margin-bottom:20px;">
-    <button class="btn btn-outline" onclick="startPolicySearch()">🔄 重新搜索</button>
+    <button class="btn btn-success" onclick="goToSummary()">📊 进入政策汇总</button>
+    <button class="btn btn-outline" style="margin-top:10px;" onclick="startPolicySearch()">🔄 重新搜索</button>
+    <button class="btn btn-outline" style="margin-top:10px;" onclick="goBack()">← 返回查询</button>
+  </div>
+</div>
+
+<!-- ========== 第四步：政策汇总 ========== -->
+<div class="container hidden" id="step4">
+  <div class="card">
+    <div class="card-title">📊 政策汇总排名</div>
+    <p style="font-size:13px; color:#666; margin-bottom:12px; line-height:1.5;">
+      按业务层分组，按匹配度排序，展示金额范围和有效期。
+    </p>
+    <div id="summaryContent"></div>
+  </div>
+
+  <div style="margin-bottom:20px;">
+    <button class="btn btn-outline" onclick="setStep(3)">← 返回搜索结果</button>
+    <button class="btn btn-outline" style="margin-top:10px;" onclick="startPolicySearch()">🔄 重新搜索</button>
     <button class="btn btn-outline" style="margin-top:10px;" onclick="goBack()">← 返回查询</button>
   </div>
 </div>
@@ -369,10 +496,10 @@ const MOCK_POLICIES = [
 // 状态管理
 // ──────────────────────────────────────
 let currentCompany = null;
+let lastPolicies = [];  // 保存搜索结果供汇总页用
 
 function setStep(n) {
-  // 更新步骤指示器
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 4; i++) {
     const dot = document.getElementById('dot' + i);
     dot.classList.remove('active', 'done');
     if (i < n) dot.classList.add('done');
@@ -380,11 +507,17 @@ function setStep(n) {
   }
   document.getElementById('line1').classList.toggle('done', n > 1);
   document.getElementById('line2').classList.toggle('done', n > 2);
+  document.getElementById('line3').classList.toggle('done', n > 3);
 
-  // 显示/隐藏面板
   document.getElementById('step1').classList.toggle('hidden', n !== 1);
   document.getElementById('step2').classList.toggle('hidden', n !== 2);
   document.getElementById('step3').classList.toggle('hidden', n !== 3);
+  document.getElementById('step4').classList.toggle('hidden', n !== 4);
+}
+
+function goToSummary() {
+  setStep(4);
+  renderSummary(lastPolicies);
 }
 
 // ──────────────────────────────────────
@@ -449,40 +582,85 @@ function startPolicySearch() {
     log.scrollTop = log.scrollHeight;
   }
 
-  // 模拟搜索过程
-  const steps = [
-    { delay: 500,  text: '📡 正在连接搜索引擎...' },
-    { delay: 1500, text: `🔍 搜索: ${currentCompany.district} ${currentCompany.industry} 产业扶持政策 site:gov.cn` },
-    { delay: 2000, text: '  → 打开百度搜索...' },
-    { delay: 2500, text: '  → 找到 2 条政府网站结果' },
-    { delay: 3000, text: '  → 提取政策信息...' },
-    { delay: 3500, text: '📄 维度1完成: 找到 2 条行业政策' },
-    { delay: 4000, text: `🔍 搜索: 上海 ${currentCompany.scale} 扶持 补贴 site:gov.cn` },
-    { delay: 4500, text: '  → 打开百度搜索...' },
-    { delay: 5000, text: '  → 找到 1 条政府网站结果' },
-    { delay: 5500, text: '📄 维度2完成: 找到 1 条小微企业政策' },
-    { delay: 6000, text: `🔍 搜索: ${currentCompany.district} 科技创新 奖励 site:gov.cn` },
-    { delay: 6500, text: '  → 打开百度搜索...' },
-    { delay: 7000, text: '  → 找到 2 条政府网站结果' },
-    { delay: 7500, text: '📄 维度3完成: 找到 2 条科技创新政策' },
-    { delay: 8000, text: '🔗 去重合并结果...' },
-    { delay: 8500, text: '✅ 搜索完成，共找到 5 条相关政策' },
-  ];
+  addLog('🧠 AI 智能搜索启动中...');
+  status.textContent = 'AI 正在分析企业信息...';
 
-  steps.forEach(({ delay, text }) => {
-    setTimeout(() => {
-      addLog(text);
-      status.textContent = text.replace(/^ +→ /, '');
-    }, delay);
+  // 构建查询参数 — 传递企业完整信息
+  const params = new URLSearchParams({
+    company_name: currentCompany.company_name || '',
+    industry: currentCompany.industry || '光通信',
+    region: '上海',
+    district: currentCompany.district || '',
+    tags: (currentCompany.tags || []).join(','),
+    registered_capital: currentCompany.registered_capital || '',
+    employees: currentCompany.scale || '',
+    founded: currentCompany.established_date || '',
   });
 
-  // 显示结果
-  setTimeout(() => {
-    document.getElementById('searchingCard').classList.add('hidden');
-    document.getElementById('resultCard').classList.remove('hidden');
-    document.getElementById('resultActions').classList.remove('hidden');
-    renderPolicies(MOCK_POLICIES);
-  }, 9000);
+  // SSE 连接真实 API
+  const es = new EventSource(`/api/policy-search/stream?${params}`);
+
+  es.onmessage = function(event) {
+    let data;
+    try { data = JSON.parse(event.data); } catch(e) { return; }
+
+    if (data.type === 'log') {
+      addLog(data.message);
+      // 只把关键步骤显示在状态栏，忽略警告类日志
+      const msg = data.message;
+      if (!msg.includes('timeout') && !msg.includes('WARNING') && !msg.includes('readiness')) {
+        const short = msg.length > 60 ? msg.substring(0, 60) + '...' : msg;
+        status.textContent = short;
+      }
+    }
+    else if (data.type === 'status') {
+      addLog(`📡 ${data.message}`);
+      status.textContent = data.message;
+    }
+    else if (data.type === 'result') {
+      const result = data.data;
+      addLog(`✅ 搜索完成! 耗时 ${result.duration}s，Worker: ${result.worker || 'unknown'}，找到 ${result.policy_count || 0} 条政策`);
+
+      // 统一格式: WorkerResult.policies
+      let policies = result.policies || [];
+
+      // 兼容旧格式
+      if (!policies.length && result.structured && result.structured.policies) {
+        policies = result.structured.policies;
+      } else if (!policies.length && result.result && typeof result.result === 'object' && result.result.policies) {
+        policies = result.result.policies;
+      }
+
+      if (result.search_notes) {
+        addLog(`📝 ${result.search_notes}`);
+      } else if (result.structured && result.structured.search_notes) {
+        addLog(`📝 ${result.structured.search_notes}`);
+      }
+
+      document.getElementById('searchingCard').classList.add('hidden');
+      document.getElementById('resultCard').classList.remove('hidden');
+      document.getElementById('resultActions').classList.remove('hidden');
+      lastPolicies = policies;
+      renderPolicies(policies);
+    }
+    else if (data.type === 'done') {
+      es.close();
+    }
+    else if (data.type === 'error') {
+      addLog(`❌ 错误: ${data.message}`);
+      status.textContent = '搜索出错';
+      document.getElementById('searchingCard').classList.add('hidden');
+      document.getElementById('resultActions').classList.remove('hidden');
+      es.close();
+    }
+    // heartbeat — ignore
+  };
+
+  es.onerror = function() {
+    addLog('❌ 连接断开，搜索可能仍在运行...');
+    status.textContent = '连接断开';
+    es.close();
+  };
 }
 
 function renderPolicies(policies) {
@@ -494,25 +672,119 @@ function renderPolicies(policies) {
   }
 
   const html = policies.map((p, i) => {
-    const sourceTag = p.source.includes('区') ? 'tag-gov' :
-                      p.source.includes('微信') ? 'tag-wechat' : 'tag-other';
+    const source = p.source || '未知来源';
+    const sourceTag = source.includes('区') || source.includes('gov') ? 'tag-gov' :
+                      source.includes('微信') ? 'tag-wechat' : 'tag-other';
+    const applicable = p.industry || p.applicable_industry || p.applicable || '';
+    const keySupport = p.support || p.key_support || '';
+    const title = p.title || p.policy_title || '未命名政策';
+    const date = p.date || p.publish_date || '';
+    const urlDisplay = p.url
+      ? `<a href="${p.url}" target="_blank">${p.url}</a>`
+      : '<span class="no-link">未找到</span>';
+    const pdfDisplay = p.pdf_url
+      ? `<a href="${p.pdf_url}" target="_blank">${p.pdf_url}</a>`
+      : '<span class="no-link">未找到</span>';
+
     return `
     <div class="policy-item">
-      <div class="policy-title">${i + 1}. ${p.policy_title}</div>
+      <div class="policy-title">${i + 1}. ${title}</div>
       <div class="policy-meta">
-        <span class="tag ${sourceTag}">${p.source}</span>
-        ${p.publish_date ? '📅 ' + p.publish_date : ''}
-        ${p.applicable ? ' · 适用: ' + p.applicable : ''}
+        <span class="tag ${sourceTag}">${source}</span>
+        ${date ? '📅 ' + date : ''}
+        ${applicable ? ' · 适用: ' + applicable : ''}
       </div>
-      <div class="policy-summary">${p.summary}</div>
-      <div class="policy-links">
-        ${p.url ? `<a href="${p.url}" target="_blank">📄 原文链接</a>` : ''}
-        ${p.pdf_url ? `<a href="${p.pdf_url}" target="_blank">📥 PDF下载</a>` : ''}
+      <div class="policy-summary">${p.summary || '暂无摘要'}</div>
+      ${keySupport ? `<div class="support-block">💰 ${keySupport}</div>` : ''}
+      <div class="link-block">
+        <div class="link-row">
+          <span class="link-label">📄 原文链接</span>
+          ${urlDisplay}
+        </div>
+        <div class="link-row">
+          <span class="link-label">📥 PDF下载</span>
+          ${pdfDisplay}
+        </div>
       </div>
     </div>`;
   }).join('');
 
   document.getElementById('policyList').innerHTML = html;
+}
+
+// ──────────────────────────────────────
+// 汇总表格（按层分组 + 排名）
+// ──────────────────────────────────────
+function renderSummary(policies) {
+  const layers = ['基础层', '发展层', '人才层', '荣誉层'];
+  const grouped = {};
+  layers.forEach(l => grouped[l] = []);
+  const ungrouped = [];
+
+  policies.forEach((p, i) => {
+    const layer = p.layer || '';
+    const item = { ...p, _rank: i + 1 };
+    if (grouped[layer]) grouped[layer].push(item);
+    else ungrouped.push(item);
+  });
+
+  let html = '';
+
+  layers.forEach(layer => {
+    const items = grouped[layer];
+    if (!items.length) return;
+
+    html += `<div style="margin-bottom:16px;">
+      <div style="margin-bottom:6px;">
+        <span class="layer-badge layer-${layer}">${layer}</span>
+        <span style="font-size:12px; color:#999; margin-left:6px;">${items.length} 条政策</span>
+      </div>
+      <table class="summary-table">
+        <tr>
+          <th style="width:30px;">#</th>
+          <th>政策名称</th>
+          <th style="width:55px;">评分</th>
+          <th style="width:80px;">金额</th>
+          <th style="width:80px;">有效期</th>
+        </tr>`;
+
+    items.forEach((p, j) => {
+      const score = p.relevance || 0;
+      const scoreClass = score >= 70 ? 'score-high' : score >= 50 ? 'score-mid' : 'score-low';
+      const title = p.title || p.policy_title || '未命名';
+      const shortTitle = title.length > 22 ? title.substring(0, 22) + '...' : title;
+      const validity = p.validity || '—';
+      const amount = p.amount || '—';
+
+      html += `<tr>
+        <td style="color:#999; font-size:12px;">${j + 1}</td>
+        <td>
+          ${p.url ? `<a href="${p.url}" target="_blank" style="color:#333; text-decoration:none; font-size:13px;">${shortTitle}</a>` : `<span style="font-size:13px;">${shortTitle}</span>`}
+        </td>
+        <td>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <span style="font-size:12px; font-weight:600; color:${score >= 70 ? '#34a853' : score >= 50 ? '#f9a825' : '#ea4335'};">${score}</span>
+            <div class="score-bar"><div class="score-fill ${scoreClass}" style="width:${score}%;"></div></div>
+          </div>
+        </td>
+        <td style="font-size:12px; color:#1a73e8; font-weight:500;">${amount}</td>
+        <td class="validity-tag">${validity}</td>
+      </tr>`;
+    });
+
+    html += '</table></div>';
+  });
+
+  // 未分类
+  if (ungrouped.length) {
+    html += `<div style="margin-top:12px; font-size:12px; color:#999;">未分类: ${ungrouped.length} 条</div>`;
+  }
+
+  if (!html) {
+    html = '<div class="empty">暂无汇总数据</div>';
+  }
+
+  document.getElementById('summaryContent').innerHTML = html;
 }
 
 // ──────────────────────────────────────
