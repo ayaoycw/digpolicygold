@@ -1,8 +1,14 @@
 """
-Policy Search API Server v0.14
+Policy Search API Server v0.15
 ==============================
-FastAPI 后端，使用 Orchestrator 智能搜索：
-  AI 分析企业信息 → 拆分多层搜索任务 → Web Search → AI 评审回路 → 去重汇总
+FastAPI 后端，使用 Orchestrator 智能搜索（专家特征工程版）：
+  企业工商数据 → 5维度特征逆向工程 → 精准搜索策略 → Web Search → AI 评审回路 → 去重汇总
+
+v0.15 更新：
+  - 专家认知框架：空间载体/产业链/身份属性/人力资源/合规熔断 5维度分析
+  - Prompt 文件化：prompts/expert_system_prompt.md + expert_user_prompt.md
+  - 扩展 company_info 字段：address, business_scope, shareholders, ip, headcount_history, risk_info
+  - 合规熔断机制：严重失信企业自动触发政策绝缘
 
 通过 SSE 实时推送搜索过程和结果。
 
@@ -93,6 +99,11 @@ def save_search_log(mode: str, query: str, log_lines: list[str], result: "Worker
             lines.append(f"       来源: {p.source or '未知'}")
             lines.append(f"       日期: {p.date or '未知'}")
             lines.append(f"       行业: {p.industry or '未知'}")
+            lines.append(f"       评分: {p.relevance}分 [💰{p.score_amount} 🎯{p.score_exclusivity} ✅{p.score_feasibility} ⏰{p.score_urgency} 🔄{p.score_sustainability}]")
+            lines.append(f"       金额: {p.amount or '未知'} ({p.amount_level or '?'}级)")
+            lines.append(f"       有效期: {p.validity or '未知'}")
+            lines.append(f"       申报截止: {p.application_deadline or '未知'}")
+            lines.append(f"       评分理由: {p.score_reason or '无'}")
             lines.append(f"       摘要: {p.summary or '无'}")
             lines.append(f"       扶持: {p.support or '无'}")
             lines.append(f"       🔗 原文链接: {p.url or '无'}")
@@ -174,6 +185,9 @@ async def policy_search_stream(
     registered_capital: str = Query("", description="注册资本"),
     employees: str = Query("", description="员工规模"),
     founded: str = Query("", description="成立时间"),
+    address: str = Query("", description="注册地址全文，用于园区识别"),
+    business_scope: str = Query("", description="经营范围"),
+    risk_info: str = Query("", description="风险信息"),
 ):
     """SSE 流式智能搜索 — Orchestrator 驱动"""
 
@@ -190,6 +204,12 @@ async def policy_search_stream(
         company_info["employees"] = employees
     if founded:
         company_info["founded"] = founded
+    if address:
+        company_info["address"] = address
+    if business_scope:
+        company_info["business_scope"] = business_scope
+    if risk_info:
+        company_info["risk_info"] = risk_info
 
     async def event_generator():
         log_lines = []
@@ -206,8 +226,8 @@ async def policy_search_stream(
 
         orch = Orchestrator(
             on_log=on_log,
-            time_budget=180.0,
-            max_rounds=2,
+            time_budget=360.0,
+            max_rounds=3,
             request_delay=3.0,
         )
 
@@ -272,7 +292,7 @@ def _sse(data: dict) -> str:
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "version": "0.14", "time": datetime.now().isoformat()}
+    return {"status": "ok", "version": "0.15", "time": datetime.now().isoformat()}
 
 
 @app.get("/api/logs")
@@ -319,7 +339,7 @@ async def get_search_log(filename: str):
 
 if __name__ == "__main__":
     import uvicorn
-    print("🚀 Policy Search API v0.14 (Orchestrator 智能搜索)")
+    print("🚀 Policy Search API v0.15 (专家特征工程 + Orchestrator 智能搜索)")
     print("   http://0.0.0.0:8000")
     print("   智能搜索: /api/policy-search/stream?industry=光通信&region=上海")
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

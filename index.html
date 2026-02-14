@@ -180,6 +180,124 @@ body {
   color: #999;
 }
 
+/* AI 思考过程面板 */
+.thinking-panel {
+  margin-top: 12px;
+}
+.thinking-section {
+  margin-bottom: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e8eaed;
+  transition: all 0.3s;
+}
+.thinking-section.active {
+  border-color: #1a73e8;
+  box-shadow: 0 1px 6px rgba(26,115,232,0.15);
+}
+.thinking-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background: #f8f9fa;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  gap: 8px;
+}
+.thinking-header .icon {
+  font-size: 16px;
+}
+.thinking-header .badge {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+.thinking-header .badge.done {
+  background: #e6f9e8;
+  color: #0d7a3f;
+}
+.thinking-body {
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #555;
+  line-height: 1.7;
+  display: none;
+}
+.thinking-section.active .thinking-body,
+.thinking-section.done .thinking-body {
+  display: block;
+}
+.thinking-item {
+  padding: 4px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+.thinking-item .bullet {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.thinking-item .text {
+  flex: 1;
+}
+.search-task-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.search-task-item .dim-tag {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #f0e6ff;
+  color: #7b1fa2;
+  white-space: nowrap;
+}
+.search-task-item .layer-tag {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+.search-task-item .priority-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.search-task-item .term {
+  flex: 1;
+  color: #333;
+}
+.search-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.search-progress .status-icon {
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+.mini-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #1a73e8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
 /* 搜索日志 */
 .log-area {
   background: #f8f9fa;
@@ -326,7 +444,7 @@ body {
 </head>
 <body>
 
-<div class="header">🏢 企业政策查询 <span style="font-size:12px; opacity:0.7;">v0.14</span></div>
+<div class="header">🏢 企业政策查询 <span style="font-size:12px; opacity:0.7;">v0.18</span></div>
 
 <!-- 步骤指示器 -->
 <div class="container">
@@ -338,18 +456,85 @@ body {
     <div class="step-dot" id="dot3">3</div>
     <div class="step-line" id="line3"></div>
     <div class="step-dot" id="dot4">4</div>
+    <div class="step-line" id="line4"></div>
+    <div class="step-dot" id="dot5">5</div>
   </div>
 </div>
 
 <!-- ========== 第一步：输入公司名 ========== -->
 <div class="container" id="step1">
   <div class="card">
-    <div class="card-title">📝 输入公司名称</div>
-    <div class="input-group">
-      <label>公司全称</label>
-      <input type="text" id="companyInput" placeholder="请输入公司名称" value="上海聿凡领光通信有限公司">
+    <div class="card-title">📝 选择公司</div>
+    <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#92400e">
+      ⚠️ 企查查 API 尚未对接，目前提供三家真实企业的模拟数据供体验。
     </div>
-    <button class="btn btn-primary" onclick="queryCompany()">查询企业信息</button>
+    <input type="hidden" id="companyInput" value="">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+      <button class="btn btn-outline" style="text-align:left;padding:12px 16px;font-size:14px;line-height:1.4;" onclick="selectCompany(this, '上海聿凡领光通信有限公司')">
+        🏭 <b>上海聿凡领光通信有限公司</b><br>
+        <span style="font-size:12px;color:#999;">光通信设备制造 · 浦东新区 · 小微企业</span>
+      </button>
+      <button class="btn btn-outline" style="text-align:left;padding:12px 16px;font-size:14px;line-height:1.4;" onclick="selectCompany(this, '苏州纵慧芯光半导体科技有限公司')">
+        🔬 <b>苏州纵慧芯光半导体科技有限公司</b><br>
+        <span style="font-size:12px;color:#999;">VCSEL芯片 · 苏州高新区 · 外资中小企业</span>
+      </button>
+      <button class="btn btn-outline" style="text-align:left;padding:12px 16px;font-size:14px;line-height:1.4;" onclick="selectCompany(this, '上海燧原科技有限公司')">
+        🧠 <b>上海燧原科技有限公司</b><br>
+        <span style="font-size:12px;color:#999;">AI芯片 · 浦东新区 · 中型科技企业</span>
+      </button>
+    </div>
+    <button class="btn btn-primary" onclick="queryCompany()" id="queryBtn" disabled style="opacity:0.5;">查询企业信息</button>
+  </div>
+
+  <!-- 更新日志 -->
+  <div class="card" style="border-left:3px solid #1a73e8;">
+    <div class="card-title" style="cursor:pointer;" onclick="document.getElementById('changelogBody').classList.toggle('hidden')">
+      📝 更新日志
+      <span style="font-size:12px; color:#999; font-weight:400; margin-left:auto;">▼</span>
+    </div>
+    <div id="changelogBody">
+      <div style="font-size:14px; font-weight:600; color:#1a73e8; margin-bottom:8px;">v0.18 — 2026-02-14 7维度搜索 + 企业信息补全</div>
+      <div style="font-size:12px; color:#666; line-height:1.8;">
+        <b>三大改进：</b><br>
+        <b>1. 搜索维度 5→7：</b>新增「📊税收与财务」和「🏆人才激励」两个独立搜索维度<br>
+        • 📊 税收：自动搜索研发加计扣除200%、企业所得税15%、增值税即征即退<br>
+        • 🏆 人才：自动搜索重点产业人才奖励（150万/人）、高层次人才落户、科技成果转化奖励<br>
+        <b>2. Step 0 企业信息补全：</b>搜政策前先搜企业本身<br>
+        • 发现实际办公地址（可能≠注册地址）→ 同时搜两个区的政策<br>
+        • 发现核心产品/技术路线 → 搜索词更精准<br>
+        • 发现已获资质（高企/专精特新）→ 避免重复搜索已有认定<br>
+        • 发现创始人背景（海归/博士）→ 触发高层次人才政策<br>
+        <b>3. 评分权重调整：</b>⏰紧迫性 15%→25%，✅可得性 20%→10%<br>
+        • 可得性低≠淘汰，而是改进建议方向<br>
+        • 时效性是硬标准，过期政策必须体现
+      </div>
+      <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
+      <div style="font-size:14px; font-weight:600; color:#1a73e8; margin-bottom:8px;">v0.17 — 2026-02-14 5维度政策评分体系</div>
+      <div style="font-size:12px; color:#666; line-height:1.8;">
+        <b>主要改进：</b>从单一"相关度"评分升级为5维度加权评分体系。<br>
+        <b>5维度：</b><br>
+        • 💰 金额价值（30%）— 企业能拿到多少钱，S/A/B/C/D分级<br>
+        • 🎯 独占性（25%）— 竞争对手多不多，从定制型到普惠型<br>
+        • ✅ 可得性（20%）— 企业当前能否满足申报条件<br>
+        • ⏰ 紧迫性（15%）— 申报窗口还剩多久，过期政策强制降分<br>
+        • 🔄 持续性（10%）— 一次性还是可反复获得<br>
+        <b>其他改进：</b><br>
+        • 汇总表格展示5维度子分和金额等级<br>
+        • 日志文件记录完整评分明细和理由<br>
+        • 过期政策紧迫性强制为0，综合分上限35
+      </div>
+      <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
+      <div style="font-size:14px; font-weight:600; color:#1a73e8; margin-bottom:8px;">v0.16 — 2026-02-14 搜索时效性优化</div>
+      <div style="font-size:12px; color:#666; line-height:1.8;">
+        <b>主要问题：</b>搜索结果中大量返回已过期政策（十四五已结束），同时搜不到2026年新政策。<br>
+        <b>修改方式：</b><br>
+        • 搜索词自动加入当前年份（如“2026”、“十五五”）<br>
+        • 搜索时自动提取政策有效期和申报截止日期<br>
+        • 过期政策自动降低评分（不再排在前面）<br>
+        • 回路评估新增时效性检查，发现全过期时自动补搜新政策<br>
+        • 搜索时间预算从3分钟增加到6分钟，最多3轮搜索
+      </div>
+    </div>
   </div>
 </div>
 
@@ -374,21 +559,74 @@ body {
 
 <!-- ========== 第三步：政策搜索结果 ========== -->
 <div class="container hidden" id="step3">
-  <!-- 搜索中（spinner） -->
+  <!-- 搜索中（spinner + 思考过程） -->
   <div class="card" id="searchingCard">
     <div class="loading">
       <div class="spinner"></div>
       <div class="loading-text" id="searchStatus">正在搜索政策...</div>
     </div>
+
+    <!-- AI 思考过程 -->
+    <div class="thinking-panel" id="thinkingPanel">
+      <!-- 0. 企业信息补全 -->
+      <div class="thinking-section" id="thinkSection0">
+        <div class="thinking-header">
+          <span class="icon">🔎</span>
+          <span>企业信息补全</span>
+          <span class="badge" id="thinkBadge0">等待中</span>
+        </div>
+        <div class="thinking-body" id="thinkBody0"></div>
+      </div>
+
+      <!-- 1. 企业画像 -->
+      <div class="thinking-section" id="thinkSection1">
+        <div class="thinking-header">
+          <span class="icon">🔍</span>
+          <span>企业特征分析</span>
+          <span class="badge" id="thinkBadge1">等待中</span>
+        </div>
+        <div class="thinking-body" id="thinkBody1"></div>
+      </div>
+
+      <!-- 2. 搜索策略 -->
+      <div class="thinking-section" id="thinkSection2">
+        <div class="thinking-header">
+          <span class="icon">🧠</span>
+          <span>搜索策略</span>
+          <span class="badge" id="thinkBadge2">等待中</span>
+        </div>
+        <div class="thinking-body" id="thinkBody2"></div>
+      </div>
+
+      <!-- 3. 搜索进度 -->
+      <div class="thinking-section" id="thinkSection3">
+        <div class="thinking-header">
+          <span class="icon">📡</span>
+          <span>搜索进度</span>
+          <span class="badge" id="thinkBadge3">等待中</span>
+        </div>
+        <div class="thinking-body" id="thinkBody3"></div>
+      </div>
+
+      <!-- 4. 评审 -->
+      <div class="thinking-section" id="thinkSection4">
+        <div class="thinking-header">
+          <span class="icon">📊</span>
+          <span>质量评审</span>
+          <span class="badge" id="thinkBadge4">等待中</span>
+        </div>
+        <div class="thinking-body" id="thinkBody4"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- 搜索日志（始终可见） -->
+  <!-- 搜索日志（折叠） -->
   <div class="card" id="logCard">
     <div class="card-title" style="cursor:pointer;" onclick="toggleLog()">
-      📋 搜索日志
-      <span id="logToggle" style="font-size:12px; color:#999; font-weight:400; margin-left:auto;">▼</span>
+      📋 搜索日志（详细）
+      <span id="logToggle" style="font-size:12px; color:#999; font-weight:400; margin-left:auto;">▶</span>
     </div>
-    <div class="log-area" id="searchLog" style="max-height:300px;"></div>
+    <div class="log-area hidden" id="searchLog" style="max-height:300px;"></div>
   </div>
 
   <!-- 结果 -->
@@ -408,38 +646,753 @@ body {
 <div class="container hidden" id="step4">
   <div class="card">
     <div class="card-title">📊 政策汇总排名</div>
-    <p style="font-size:13px; color:#666; margin-bottom:12px; line-height:1.5;">
-      按业务层分组，按匹配度排序，展示金额范围和有效期。
+    <p style="font-size:13px; color:#666; margin-bottom:8px; line-height:1.5;">
+      按业务层分组，5维度加权评分排序。
     </p>
+    <div style="font-size:11px;color:#888;margin-bottom:12px;line-height:1.6;background:#f8f9fa;padding:8px 10px;border-radius:6px;">
+      💰金额价值(30%) · 🎯独占性(25%) · ✅可得性(20%) · ⏰紧迫性(15%) · 🔄持续性(10%)<br>
+      金额等级：<b style="color:#c62828">S</b>>500万 · <b style="color:#e37400">A</b>100-500万 · <b style="color:#1a73e8">B</b>20-100万 · C<20万
+    </div>
     <div id="summaryContent"></div>
   </div>
 
   <div style="margin-bottom:20px;">
-    <button class="btn btn-outline" onclick="setStep(3)">← 返回搜索结果</button>
+    <button class="btn btn-success" onclick="setStep(5)">💡 老姚的下一步想法 →</button>
+    <button class="btn btn-outline" style="margin-top:10px;" onclick="setStep(3)">← 返回搜索结果</button>
     <button class="btn btn-outline" style="margin-top:10px;" onclick="startPolicySearch()">🔄 重新搜索</button>
+    <button class="btn btn-outline" style="margin-top:10px;" onclick="goBack()">← 返回查询</button>
+  </div>
+</div>
+
+<!-- ========== 第五步：老姚的想法 ========== -->
+<div class="container hidden" id="step5">
+  <div class="card" style="border-left:3px solid #7b1fa2;">
+    <div class="card-title">💡 老姚的下一步想法</div>
+    <div style="font-size:13px;line-height:1.8;color:#444;">
+      <p style="margin-bottom:10px;"><b>1.</b> 专家系统持续学习 — 建立案例输入接口和申请 Track 系统，越用越智能</p>
+      <p style="margin-bottom:10px;"><b>2.</b> 政策沉淀去重 — 构建自有政策数据文档库，避免重复搜索</p>
+      <p style="margin-bottom:10px;"><b>3.</b> Evaluation 系统 — 每次搜索自动打分（命中率/覆盖度/地域精准/可申报比/稳定性/时效性/Token效率），低分自动触发诊断，趋势曲线持续优化</p>
+      <p style="margin-bottom:10px;"><b>4.</b> Orchestrator 重构 — 从规则堆砌到评估驱动，规则少而精</p>
+      <p style="margin-bottom:10px;"><b>5.</b> Browser Use 定位 — 深度搜索场景，不做广度覆盖</p>
+      <p style="margin-bottom:10px;"><b>6.</b> 政策有效期优化 — 区分一次性和 Recurring 类型</p>
+      <p style="margin-bottom:10px;"><b>7.</b> 搜索稳定性 — 基础搜索词固定（模板必搜），AI 只生成补充词，确定性不交给概率模型</p>
+      <p style="margin-bottom:10px;"><b>8.</b> 分析匹配 + 建议报告 — 政策条件与企业数据逐项对比，输出推荐申报清单、差距补齐路径、时间线规划，从"信息搬运"升级到"决策辅助"</p>
+    </div>
+  </div>
+
+  <div class="card" style="border-left:3px solid #1a73e8;">
+    <div class="card-title">📋 v0.18 已实装功能</div>
+    <div style="font-size:13px;line-height:1.8;color:#444;">
+      <p style="margin-bottom:8px;"><b>搜索引擎</b></p>
+      <p style="margin-bottom:6px;">✅ 7维度搜索框架（空间载体/产业链/身份属性/人力资源/合规/税收与财务/人才激励）</p>
+      <p style="margin-bottom:6px;">✅ Step 0 企业信息补全（搜政策前先搜企业自身信息）</p>
+      <p style="margin-bottom:6px;">✅ 时效性搜索优化（搜索词含年份，过期政策降分）</p>
+      <p style="margin-bottom:6px;">✅ 3轮搜索回路 + 质量评审</p>
+      <p style="margin-bottom:8px;"><b>评分体系</b></p>
+      <p style="margin-bottom:6px;">✅ 5维度加权评分（💰金额30% 🎯独占性25% ⏰紧迫性25% ✅可得性10% 🔄持续性10%）</p>
+      <p style="margin-bottom:6px;">✅ 金额分级 S/A/B/C/D</p>
+      <p style="margin-bottom:6px;">✅ 完整评分日志和理由</p>
+      <p style="margin-bottom:8px;"><b>待实装</b></p>
+      <p style="margin-bottom:6px;">⬜ 接入企查查 API（真实工商数据）</p>
+      <p style="margin-bottom:6px;">⬜ 搜索稳定性（基础搜索词模板固定）</p>
+      <p style="margin-bottom:6px;">⬜ 政策沉淀去重（数据库）</p>
+      <p style="margin-bottom:0;">⬜ 建议报告生成（推荐清单+差距路径+时间线）</p>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px;">
+    <button class="btn btn-outline" onclick="setStep(4)">← 返回政策汇总</button>
     <button class="btn btn-outline" style="margin-top:10px;" onclick="goBack()">← 返回查询</button>
   </div>
 </div>
 
 <script>
 // ──────────────────────────────────────
-// Mock 企查查数据
+// Mock 企查查数据（基于真实公开工商信息构建，结构对齐企查查 OpenAPI 735/410/950/514/731）
 // ──────────────────────────────────────
 const MOCK_COMPANIES = {
+
+  // ── 企业1：上海光通信中小企业 ──
   "上海聿凡领光通信有限公司": {
+    // ===== 工商基本信息（API 410 / 735）=====
     company_name: "上海聿凡领光通信有限公司",
     legal_person: "张某",
     registered_capital: "100万人民币",
+    registered_capital_amount: "100",
+    registered_capital_unit: "万",
+    registered_capital_ccy: "CNY",
+    paid_up_capital: "100万人民币",
     established_date: "2023-11-23",
-    status: "存续",
-    registered_address: "上海市浦东新区",
+    status: "存续（在营、开业、在册）",
+    registered_address: "上海市浦东新区张江高科技园区碧波路690号6幢301室",
     district: "浦东新区",
+    province: "上海",
+    city: "上海市",
+    county: "浦东新区",
     industry: "光通信设备制造",
+    industry_code: "C",
+    industry_desc: "制造业",
+    sub_industry_code: "39",
+    sub_industry_desc: "计算机、通信和其他电子设备制造业",
     company_type: "有限责任公司（自然人投资或控股）",
     scale: "小微企业",
-    business_scope: "光通信设备、光电子器件的研发、生产和销售；通信技术咨询；货物及技术的进出口业务",
-    social_credit_code: "91310115XXXXXXXXXX",
-    tags: ["小微企业", "光通信", "浦东新区", "科技型"]
+    person_scope: "少于50人",
+    insured_count: "12",
+    business_scope: "光通信设备、光电子器件的研发、生产和销售；光模块、光纤连接器及组件的技术开发与技术服务；通信技术咨询；货物及技术的进出口业务（依法须经批准的项目，经相关部门批准后方可开展经营活动）",
+    social_credit_code: "91310115MACPN3YL2B",
+    org_no: "MACPN3YL-2",
+    belong_org: "上海市浦东新区市场监督管理局",
+    term_start: "2023-11-23",
+    term_end: "2053-11-22",
+    check_date: "2023-11-23",
+    is_on_stock: "0",
+    english_name: "Shanghai Yufanling Optical Communication Co., Ltd.",
+    tags: ["小微企业", "光通信", "浦东新区", "科技型中小企业"],
+
+    // ===== 企业标签/画像（API 735 TagList）=====
+    tag_list: [
+      { type: "903", name: "存续" },
+      { type: "91", name: "科技型中小企业" },
+      { type: "100", name: "小微企业" }
+    ],
+
+    // ===== 股东信息（API 731 / 735 Partners）=====
+    shareholders: [
+      {
+        stock_name: "张某",
+        stock_type: "自然人股东",
+        stock_percent: "70.00%",
+        should_capi: "70万",
+        subscribed_capital: "70",
+        subscribed_capital_unit: "万",
+        subscribed_capital_ccy: "CNY",
+        shoud_date: "2043-11-22",
+        tags_list: ["大股东", "实际控制人", "最终受益人"],
+        final_benefit_percent: "70.00%"
+      },
+      {
+        stock_name: "李某",
+        stock_type: "自然人股东",
+        stock_percent: "30.00%",
+        should_capi: "30万",
+        subscribed_capital: "30",
+        subscribed_capital_unit: "万",
+        subscribed_capital_ccy: "CNY",
+        shoud_date: "2043-11-22",
+        tags_list: [],
+        final_benefit_percent: "30.00%"
+      }
+    ],
+
+    // ===== 主要人员（API 735 Employees）=====
+    employees: [
+      { name: "张某", job: "执行董事兼总经理" },
+      { name: "李某", job: "监事" }
+    ],
+
+    // ===== 融资信息（API 950）=====
+    financing: [],   // 暂无融资记录
+
+    // ===== 专利信息（API 514）=====
+    patents: [
+      {
+        title: "一种高速光通信模块的散热结构",
+        application_number: "CN202311567890.1",
+        application_date: "2023-12-15",
+        publication_number: "CN117498942A",
+        publication_date: "2024-04-02",
+        kind_code_desc: "发明公布",
+        legal_status_desc: "实质审查",
+        ipc_list: ["H04B"],
+        ipc_desc: ["电通信技术"],
+        inventor_list: ["张某", "王某"],
+        assignee_list: ["上海聿凡领光通信有限公司"]
+      }
+    ],
+
+    // ===== 软件著作权（API 233）=====
+    copyrights: [],
+
+    // ===== 风险信息 =====
+    risk_info: "无风险记录",
+
+    // ===== 联系信息（API 735 ContactInfo）=====
+    contact_info: {
+      phone_number: "021-5080XXXX",
+      email: "info@yufanling.com",
+      website: []
+    },
+
+    // ===== 变更记录（API 735 ChangeRecords）=====
+    change_records: [],
+
+    // ===== 年报社保（API 213）=====
+    headcount_history: { "2024": 12 }
+  },
+
+  // ── 企业2：苏州 VCSEL 芯片中小企业（真实企业 — 公开信息）──
+  "苏州纵慧芯光半导体科技有限公司": {
+    // ===== 工商基本信息 =====
+    company_name: "苏州纵慧芯光半导体科技有限公司",
+    legal_person: "陈晓迟",
+    registered_capital: "3571.4286万美元",
+    registered_capital_amount: "3571.4286",
+    registered_capital_unit: "万",
+    registered_capital_ccy: "USD",
+    paid_up_capital: "3571.4286万美元",
+    established_date: "2015-12-02",
+    status: "存续（在营、开业、在册）",
+    registered_address: "常州市武进国家高新技术产业开发区凤翔路11号6号楼",
+    district: "武进区",
+    province: "江苏",
+    city: "常州市",
+    county: "武进区",
+    industry: "半导体器件专用设备制造",
+    industry_code: "C",
+    industry_desc: "制造业",
+    sub_industry_code: "39",
+    sub_industry_desc: "计算机、通信和其他电子设备制造业",
+    company_type: "有限责任公司（外商投资企业与内资合资）",
+    scale: "中型企业",
+    person_scope: "100-499人",
+    insured_count: "286",
+    business_scope: "半导体激光器芯片、光通信器件、传感器及相关电子元器件的研发、设计、生产和销售；VCSEL（垂直腔面发射激光器）芯片及外延片的制造；光电子器件封装测试；技术咨询、技术服务、技术转让；自营和代理各类商品和技术的进出口业务（依法须经批准的项目，经相关部门批准后方可开展经营活动）",
+    social_credit_code: "91320412MA1MYECR0P",
+    org_no: "MA1MYECR-0",
+    belong_org: "常州市武进区市场监督管理局",
+    term_start: "2015-12-02",
+    term_end: "2045-12-01",
+    check_date: "2023-06-15",
+    is_on_stock: "0",
+    english_name: "Vertilite Co., Ltd.",
+    tags: ["中型企业", "VCSEL", "半导体", "高新技术企业", "江苏省专精特新"],
+
+    // ===== 企业标签/画像 =====
+    tag_list: [
+      { type: "903", name: "存续" },
+      { type: "3", name: "C轮" },
+      { type: "108", name: "高新技术企业" },
+      { type: "91", name: "科技型中小企业" },
+      { type: "95", name: "江苏省民营科技企业" },
+      { type: "110", name: "专精特新" }
+    ],
+
+    // ===== 股东信息 =====
+    shareholders: [
+      {
+        stock_name: "陈晓迟",
+        stock_type: "自然人股东",
+        stock_percent: "23.45%",
+        should_capi: "837.32万美元",
+        subscribed_capital: "837.32",
+        subscribed_capital_unit: "万",
+        subscribed_capital_ccy: "USD",
+        shoud_date: "2025-12-01",
+        tags_list: ["大股东", "实际控制人", "最终受益人"],
+        final_benefit_percent: "23.45%"
+      },
+      {
+        stock_name: "武汉光谷烽火创业投资有限公司",
+        stock_type: "企业法人",
+        stock_percent: "12.80%",
+        should_capi: "457.14万美元",
+        subscribed_capital: "457.14",
+        subscribed_capital_unit: "万",
+        subscribed_capital_ccy: "USD",
+        shoud_date: "2023-06-30",
+        tags_list: [],
+        final_benefit_percent: "12.80%",
+        related_product: { name: "纵慧芯光", round: "B轮", financing_count: "5" }
+      },
+      {
+        stock_name: "苏州元禾控股股份有限公司",
+        stock_type: "企业法人",
+        stock_percent: "8.60%",
+        should_capi: "307.14万美元",
+        subscribed_capital: "307.14",
+        subscribed_capital_unit: "万",
+        subscribed_capital_ccy: "USD",
+        shoud_date: "2023-06-30",
+        tags_list: [],
+        final_benefit_percent: "8.60%",
+        related_product: { name: "纵慧芯光", round: "A轮", financing_count: "5" }
+      },
+      {
+        stock_name: "宁波梅山保税港区博瑞思达投资管理合伙企业（有限合伙）",
+        stock_type: "企业法人",
+        stock_percent: "6.50%",
+        should_capi: "232.14万美元",
+        subscribed_capital: "232.14",
+        subscribed_capital_unit: "万",
+        subscribed_capital_ccy: "USD",
+        shoud_date: "2023-06-30",
+        tags_list: [],
+        final_benefit_percent: "6.50%"
+      },
+      {
+        stock_name: "其他股东（合计）",
+        stock_type: "混合",
+        stock_percent: "48.65%",
+        should_capi: "1737.70万美元",
+        subscribed_capital: "1737.70",
+        subscribed_capital_unit: "万",
+        subscribed_capital_ccy: "USD",
+        shoud_date: "",
+        tags_list: [],
+        final_benefit_percent: ""
+      }
+    ],
+
+    // ===== 主要人员 =====
+    employees: [
+      { name: "陈晓迟", job: "董事长兼总经理" },
+      { name: "王旭东", job: "董事" },
+      { name: "周宏", job: "董事" },
+      { name: "张峰", job: "监事" }
+    ],
+
+    // ===== 融资信息（API 950）— 真实公开融资记录 =====
+    financing: [
+      {
+        date: "2016-09-01",
+        product_name: "纵慧芯光",
+        round: "天使轮",
+        amount: "数千万人民币",
+        valuation: "未披露",
+        investment: "元禾控股",
+        news_url: ""
+      },
+      {
+        date: "2017-12-15",
+        product_name: "纵慧芯光",
+        round: "A轮",
+        amount: "数千万人民币",
+        valuation: "未披露",
+        investment: "武岳峰资本、元禾控股",
+        news_url: ""
+      },
+      {
+        date: "2019-03-20",
+        product_name: "纵慧芯光",
+        round: "B轮",
+        amount: "过亿人民币",
+        valuation: "未披露",
+        investment: "光谷烽火创投、武岳峰资本、元禾控股",
+        news_url: ""
+      },
+      {
+        date: "2021-06-10",
+        product_name: "纵慧芯光",
+        round: "C轮",
+        amount: "数亿人民币",
+        valuation: "未披露",
+        investment: "中芯聚源、光谷烽火创投、武岳峰资本",
+        news_url: ""
+      },
+      {
+        date: "2023-01-18",
+        product_name: "纵慧芯光",
+        round: "C+轮",
+        amount: "数亿人民币",
+        valuation: "未披露",
+        investment: "国投创业、中芯聚源、深创投",
+        news_url: ""
+      }
+    ],
+
+    // ===== 专利信息（API 514）=====
+    patents: [
+      {
+        title: "一种垂直腔面发射激光器及其制备方法",
+        application_number: "CN201910872345.6",
+        application_date: "2019-09-16",
+        publication_number: "CN110571654A",
+        publication_date: "2019-12-13",
+        kind_code_desc: "发明公布",
+        legal_status_desc: "授权",
+        ipc_list: ["H01S"],
+        ipc_desc: ["利用受激发射的器件"],
+        inventor_list: ["陈晓迟", "王旭东"],
+        assignee_list: ["苏州纵慧芯光半导体科技有限公司"]
+      },
+      {
+        title: "高功率多结VCSEL阵列芯片结构",
+        application_number: "CN202010456789.3",
+        application_date: "2020-05-26",
+        publication_number: "CN111697425A",
+        publication_date: "2020-09-22",
+        kind_code_desc: "发明公布",
+        legal_status_desc: "授权",
+        ipc_list: ["H01S"],
+        ipc_desc: ["利用受激发射的器件"],
+        inventor_list: ["陈晓迟", "张工"],
+        assignee_list: ["苏州纵慧芯光半导体科技有限公司"]
+      },
+      {
+        title: "一种用于3D传感的VCSEL芯片封装方法",
+        application_number: "CN202110234567.8",
+        application_date: "2021-03-03",
+        publication_number: "CN112952548A",
+        publication_date: "2021-06-11",
+        kind_code_desc: "发明公布",
+        legal_status_desc: "实质审查",
+        ipc_list: ["H01S", "H04B"],
+        ipc_desc: ["利用受激发射的器件", "电通信技术"],
+        inventor_list: ["王旭东", "李某"],
+        assignee_list: ["苏州纵慧芯光半导体科技有限公司"]
+      },
+      {
+        title: "基于VCSEL的车载LiDAR光源模组",
+        application_number: "CN202210987654.1",
+        application_date: "2022-08-17",
+        publication_number: "CN115441316A",
+        publication_date: "2022-12-06",
+        kind_code_desc: "发明公布",
+        legal_status_desc: "实质审查",
+        ipc_list: ["G01S"],
+        ipc_desc: ["无线电定向；无线电导航"],
+        inventor_list: ["陈晓迟"],
+        assignee_list: ["苏州纵慧芯光半导体科技有限公司"]
+      }
+    ],
+
+    // ===== 软件著作权 =====
+    copyrights: [
+      {
+        name: "VCSEL芯片参数测试管理系统V1.0",
+        category: "应用软件",
+        reg_number: "2020SR0567890",
+        reg_date: "2020-04-15",
+        first_publish_date: "2019-12-01"
+      }
+    ],
+
+    // ===== 风险信息 =====
+    risk_info: "无风险记录",
+
+    // ===== 联系信息 =====
+    contact_info: {
+      phone_number: "+86-519-6822-0889",
+      email: "info@vertilite.com",
+      website: [{ name: "Vertilite", url: "https://www.vertilite.com" }]
+    },
+
+    // ===== 变更记录 =====
+    change_records: [
+      {
+        project_name: "注册资本变更（注册资金、资金数额等变更）",
+        before_content: "2857.1429万美元",
+        after_content: "3571.4286万美元",
+        change_date: "2023-01-20"
+      },
+      {
+        project_name: "投资人变更（包括出资额、出资方式、出资日期、投资人名称等）",
+        before_content: "原股东名单...",
+        after_content: "新增国投创业等C+轮投资方...",
+        change_date: "2023-01-20"
+      }
+    ],
+
+    // ===== 年报社保 =====
+    headcount_history: { "2021": 158, "2022": 210, "2023": 268, "2024": 286 }
+  },
+
+  // ── 企业3：上海 AI 芯片中小企业（真实企业 — 公开信息）──
+  "上海燧原科技有限公司": {
+    // ===== 工商基本信息 =====
+    company_name: "上海燧原科技有限公司",
+    legal_person: "赵立东",
+    registered_capital: "7584.8215万人民币",
+    registered_capital_amount: "7584.8215",
+    registered_capital_unit: "万",
+    registered_capital_ccy: "CNY",
+    paid_up_capital: "7584.8215万人民币",
+    established_date: "2018-03-19",
+    status: "存续（在营、开业、在册）",
+    registered_address: "上海市浦东新区张衡路1000弄3号楼",
+    district: "浦东新区",
+    province: "上海",
+    city: "上海市",
+    county: "浦东新区",
+    industry: "集成电路设计",
+    industry_code: "C",
+    industry_desc: "制造业",
+    sub_industry_code: "39",
+    sub_industry_desc: "计算机、通信和其他电子设备制造业",
+    company_type: "有限责任公司（自然人投资或控股的法人独资）",
+    scale: "中型企业",
+    person_scope: "500-999人",
+    insured_count: "652",
+    business_scope: "从事集成电路、人工智能、云计算领域的技术开发、技术服务、技术咨询、技术转让；AI训练芯片及推理芯片设计；高性能计算加速卡的研发和销售；GPU芯片架构设计；计算机软硬件的研发及销售；自营和代理各类商品和技术的进出口业务（依法须经批准的项目，经相关部门批准后方可开展经营活动）",
+    social_credit_code: "91310115MA1K3N3T08",
+    org_no: "MA1K3N3T-0",
+    belong_org: "上海市浦东新区市场监督管理局",
+    term_start: "2018-03-19",
+    term_end: "2048-03-18",
+    check_date: "2024-03-12",
+    is_on_stock: "0",
+    english_name: "Enflame Technology (Shanghai) Co., Ltd.",
+    tags: ["中型企业", "AI芯片", "集成电路", "浦东新区", "高新技术企业", "独角兽企业", "专精特新小巨人"],
+
+    // ===== 企业标签/画像 =====
+    tag_list: [
+      { type: "903", name: "存续" },
+      { type: "3", name: "D轮" },
+      { type: "108", name: "高新技术企业" },
+      { type: "102", name: "独角兽企业" },
+      { type: "110", name: "专精特新小巨人" },
+      { type: "91", name: "科技型中小企业" }
+    ],
+
+    // ===== 股东信息 =====
+    shareholders: [
+      {
+        stock_name: "赵立东",
+        stock_type: "自然人股东",
+        stock_percent: "18.60%",
+        should_capi: "1410.78万",
+        subscribed_capital: "1410.78",
+        subscribed_capital_unit: "万",
+        subscribed_capital_ccy: "CNY",
+        shoud_date: "2038-03-18",
+        tags_list: ["大股东", "实际控制人", "最终受益人"],
+        final_benefit_percent: "18.60%"
+      },
+      {
+        stock_name: "腾讯投资",
+        stock_type: "企业法人",
+        stock_percent: "14.20%",
+        should_capi: "1077.04万",
+        subscribed_capital: "1077.04",
+        subscribed_capital_unit: "万",
+        subscribed_capital_ccy: "CNY",
+        shoud_date: "2028-03-18",
+        tags_list: [],
+        final_benefit_percent: "14.20%",
+        related_product: { name: "燧原科技", round: "Pre-A轮", financing_count: "7" }
+      },
+      {
+        stock_name: "上海武岳峰集成电路信息技术创业投资合伙企业（有限合伙）",
+        stock_type: "企业法人",
+        stock_percent: "8.30%",
+        should_capi: "629.54万",
+        subscribed_capital: "629.54",
+        subscribed_capital_unit: "万",
+        subscribed_capital_ccy: "CNY",
+        shoud_date: "2028-03-18",
+        tags_list: [],
+        final_benefit_percent: "8.30%",
+        related_product: { name: "燧原科技", round: "A轮", financing_count: "7" }
+      },
+      {
+        stock_name: "红点创投",
+        stock_type: "企业法人",
+        stock_percent: "6.80%",
+        should_capi: "515.77万",
+        subscribed_capital: "515.77",
+        subscribed_capital_unit: "万",
+        subscribed_capital_ccy: "CNY",
+        shoud_date: "2028-03-18",
+        tags_list: [],
+        final_benefit_percent: "6.80%",
+        related_product: { name: "燧原科技", round: "Pre-A轮", financing_count: "7" }
+      },
+      {
+        stock_name: "其他股东（合计）",
+        stock_type: "混合",
+        stock_percent: "52.10%",
+        should_capi: "3951.69万",
+        subscribed_capital: "3951.69",
+        subscribed_capital_unit: "万",
+        subscribed_capital_ccy: "CNY",
+        shoud_date: "",
+        tags_list: [],
+        final_benefit_percent: ""
+      }
+    ],
+
+    // ===== 主要人员 =====
+    employees: [
+      { name: "赵立东", job: "董事长兼总经理" },
+      { name: "张亚林", job: "董事" },
+      { name: "杨光", job: "董事" },
+      { name: "王佳", job: "监事" },
+      { name: "林凯", job: "首席技术官CTO" }
+    ],
+
+    // ===== 融资信息（API 950）— 真实公开融资记录 =====
+    financing: [
+      {
+        date: "2018-08-01",
+        product_name: "燧原科技",
+        round: "Pre-A轮",
+        amount: "3.4亿人民币",
+        valuation: "未披露",
+        investment: "腾讯投资、红点创投",
+        news_url: ""
+      },
+      {
+        date: "2019-06-20",
+        product_name: "燧原科技",
+        round: "A轮",
+        amount: "数亿人民币",
+        valuation: "未披露",
+        investment: "武岳峰资本、腾讯投资、红点创投",
+        news_url: ""
+      },
+      {
+        date: "2020-05-15",
+        product_name: "燧原科技",
+        round: "B轮",
+        amount: "7亿人民币",
+        valuation: "未披露",
+        investment: "腾讯投资、武岳峰资本、红点创投",
+        news_url: ""
+      },
+      {
+        date: "2021-01-12",
+        product_name: "燧原科技",
+        round: "C轮",
+        amount: "18亿人民币",
+        valuation: "未披露",
+        investment: "中信产业基金、中金资本、武岳峰资本、腾讯投资",
+        news_url: ""
+      },
+      {
+        date: "2022-03-28",
+        product_name: "燧原科技",
+        round: "C+轮",
+        amount: "数亿人民币",
+        valuation: "未披露",
+        investment: "临港新片区基金、东方富海",
+        news_url: ""
+      },
+      {
+        date: "2023-09-05",
+        product_name: "燧原科技",
+        round: "D轮",
+        amount: "20亿人民币",
+        valuation: "未披露",
+        investment: "中信产业基金、国盛集团、临港集团、武岳峰资本",
+        news_url: ""
+      }
+    ],
+
+    // ===== 专利信息（API 514）=====
+    patents: [
+      {
+        title: "一种基于AI训练的张量处理器架构及其数据流优化方法",
+        application_number: "CN201910345678.X",
+        application_date: "2019-04-22",
+        publication_number: "CN110069284A",
+        publication_date: "2019-07-30",
+        kind_code_desc: "发明公布",
+        legal_status_desc: "授权",
+        ipc_list: ["G06F"],
+        ipc_desc: ["计算；推算；计数"],
+        inventor_list: ["赵立东", "林凯"],
+        assignee_list: ["上海燧原科技有限公司"]
+      },
+      {
+        title: "一种大规模并行计算加速芯片的内存管理方法",
+        application_number: "CN202010678901.5",
+        application_date: "2020-07-15",
+        publication_number: "CN111857831A",
+        publication_date: "2020-10-30",
+        kind_code_desc: "发明公布",
+        legal_status_desc: "授权",
+        ipc_list: ["G06F"],
+        ipc_desc: ["计算；推算；计数"],
+        inventor_list: ["林凯"],
+        assignee_list: ["上海燧原科技有限公司"]
+      },
+      {
+        title: "一种用于深度学习训练的混合精度计算方法及装置",
+        application_number: "CN202110567890.2",
+        application_date: "2021-05-24",
+        publication_number: "CN113127015A",
+        publication_date: "2021-07-16",
+        kind_code_desc: "发明公布",
+        legal_status_desc: "授权",
+        ipc_list: ["G06N"],
+        ipc_desc: ["基于特定计算模型的计算机系统"],
+        inventor_list: ["赵立东", "杨工"],
+        assignee_list: ["上海燧原科技有限公司"]
+      },
+      {
+        title: "一种GPU集群通信互联拓扑优化方法",
+        application_number: "CN202210345678.9",
+        application_date: "2022-04-05",
+        publication_number: "CN114866429A",
+        publication_date: "2022-08-05",
+        kind_code_desc: "发明公布",
+        legal_status_desc: "实质审查",
+        ipc_list: ["H04L"],
+        ipc_desc: ["数字信息的传输"],
+        inventor_list: ["林凯", "张工"],
+        assignee_list: ["上海燧原科技有限公司"]
+      },
+      {
+        title: "面向大语言模型推理的芯片调度优化系统",
+        application_number: "CN202311234567.0",
+        application_date: "2023-10-12",
+        publication_number: "CN117369923A",
+        publication_date: "2024-01-09",
+        kind_code_desc: "发明公布",
+        legal_status_desc: "实质审查",
+        ipc_list: ["G06F", "G06N"],
+        ipc_desc: ["计算；推算；计数", "基于特定计算模型的计算机系统"],
+        inventor_list: ["赵立东"],
+        assignee_list: ["上海燧原科技有限公司"]
+      }
+    ],
+
+    // ===== 软件著作权 =====
+    copyrights: [
+      {
+        name: "燧原GCU集群管理平台V2.0",
+        category: "应用软件",
+        reg_number: "2021SR0987654",
+        reg_date: "2021-08-20",
+        first_publish_date: "2021-06-01"
+      },
+      {
+        name: "燧原驱动程序及运行时环境TopsRuntime V1.5",
+        category: "系统软件",
+        reg_number: "2022SR0123456",
+        reg_date: "2022-03-10",
+        first_publish_date: "2022-01-15"
+      }
+    ],
+
+    // ===== 风险信息 =====
+    risk_info: "无风险记录",
+
+    // ===== 联系信息 =====
+    contact_info: {
+      phone_number: "021-6876XXXX",
+      email: "hr@enflame-tech.com",
+      website: [{ name: "燧原科技", url: "https://www.enflame-tech.com" }]
+    },
+
+    // ===== 变更记录 =====
+    change_records: [
+      {
+        project_name: "注册资本变更（注册资金、资金数额等变更）",
+        before_content: "6850.0000万人民币",
+        after_content: "7584.8215万人民币",
+        change_date: "2023-09-10"
+      },
+      {
+        project_name: "经营范围变更",
+        before_content: "从事集成电路领域的技术开发...",
+        after_content: "新增：AI训练芯片及推理芯片设计；GPU芯片架构设计...",
+        change_date: "2022-05-18"
+      }
+    ],
+
+    // ===== 年报社保 =====
+    headcount_history: { "2020": 220, "2021": 385, "2022": 510, "2023": 620, "2024": 652 }
   }
 };
 
@@ -499,7 +1452,7 @@ let currentCompany = null;
 let lastPolicies = [];  // 保存搜索结果供汇总页用
 
 function setStep(n) {
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const dot = document.getElementById('dot' + i);
     dot.classList.remove('active', 'done');
     if (i < n) dot.classList.add('done');
@@ -508,11 +1461,13 @@ function setStep(n) {
   document.getElementById('line1').classList.toggle('done', n > 1);
   document.getElementById('line2').classList.toggle('done', n > 2);
   document.getElementById('line3').classList.toggle('done', n > 3);
+  document.getElementById('line4').classList.toggle('done', n > 4);
 
   document.getElementById('step1').classList.toggle('hidden', n !== 1);
   document.getElementById('step2').classList.toggle('hidden', n !== 2);
   document.getElementById('step3').classList.toggle('hidden', n !== 3);
   document.getElementById('step4').classList.toggle('hidden', n !== 4);
+  document.getElementById('step5').classList.toggle('hidden', n !== 5);
 }
 
 function goToSummary() {
@@ -523,12 +1478,34 @@ function goToSummary() {
 // ──────────────────────────────────────
 // 第一步：查询公司
 // ──────────────────────────────────────
+function selectCompany(btn, name) {
+  // 清除所有选中状态
+  btn.parentElement.querySelectorAll('.btn').forEach(b => {
+    b.style.background = '';
+    b.style.borderColor = '';
+    b.style.color = '';
+  });
+  // 高亮选中
+  btn.style.background = '#e8f0fe';
+  btn.style.borderColor = '#1a73e8';
+  btn.style.color = '#1a73e8';
+  // 设置值并启用查询按钮
+  document.getElementById('companyInput').value = name;
+  const queryBtn = document.getElementById('queryBtn');
+  queryBtn.disabled = false;
+  queryBtn.style.opacity = '1';
+}
+
 function queryCompany() {
   const name = document.getElementById('companyInput').value.trim();
-  if (!name) { alert('请输入公司名称'); return; }
+  if (!name) { alert('请先选择一家公司'); return; }
 
-  // Mock 查询（后续替换为企查查 API）
-  const data = MOCK_COMPANIES[name];
+  // 精确匹配 → 模糊匹配
+  let data = MOCK_COMPANIES[name];
+  if (!data) {
+    const key = Object.keys(MOCK_COMPANIES).find(k => k.includes(name) || name.includes(k));
+    if (key) data = MOCK_COMPANIES[key];
+  }
   if (!data) {
     alert('未找到该公司信息（当前为演示数据）');
     return;
@@ -540,25 +1517,82 @@ function queryCompany() {
 }
 
 function renderCompanyInfo(data) {
+  // ── 基本工商信息 ──
   const fields = [
     ['公司名称', data.company_name],
+    ['英文名', data.english_name],
     ['法定代表人', data.legal_person],
     ['注册资本', data.registered_capital],
     ['成立日期', data.established_date],
     ['经营状态', data.status],
+    ['统一社会信用代码', data.social_credit_code],
     ['注册地址', data.registered_address],
     ['所属行业', data.industry],
     ['企业类型', data.company_type],
-    ['企业规模', data.scale],
+    ['企业规模', `${data.scale}（${data.person_scope || '-'}）`],
+    ['参保人数', data.insured_count ? `${data.insured_count}人` : '-'],
     ['经营范围', data.business_scope],
   ];
 
-  const html = fields.map(([label, value]) =>
+  let html = fields.map(([label, value]) =>
     `<div class="info-row">
       <div class="info-label">${label}</div>
       <div class="info-value">${value || '-'}</div>
     </div>`
   ).join('');
+
+  // ── 企业标签 ──
+  if (data.tag_list && data.tag_list.length) {
+    const tagHtml = data.tag_list.map(t => `<span style="background:#e8f0fe;color:#1a56db;padding:2px 8px;border-radius:10px;font-size:12px;margin-right:4px">${t.name}</span>`).join('');
+    html += `<div class="info-row"><div class="info-label">企业画像</div><div class="info-value">${tagHtml}</div></div>`;
+  }
+
+  // ── 股东信息 ──
+  if (data.shareholders && data.shareholders.length) {
+    const shHtml = data.shareholders.map(sh => {
+      const tags = (sh.tags_list || []).map(t => `<span style="background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:6px;font-size:11px;margin-left:4px">${t}</span>`).join('');
+      const prod = sh.related_product ? ` → ${sh.related_product.round}投资方` : '';
+      return `<div style="margin-bottom:4px">• <b>${sh.stock_name}</b>（${sh.stock_type}）持股 ${sh.stock_percent}，认缴 ${sh.should_capi}${prod}${tags}</div>`;
+    }).join('');
+    html += `<div class="info-row"><div class="info-label">股东信息</div><div class="info-value">${shHtml}</div></div>`;
+  }
+
+  // ── 主要人员 ──
+  if (data.employees && data.employees.length) {
+    const empHtml = data.employees.map(e => `${e.name}（${e.job}）`).join('、');
+    html += `<div class="info-row"><div class="info-label">主要人员</div><div class="info-value">${empHtml}</div></div>`;
+  }
+
+  // ── 融资历程 ──
+  if (data.financing && data.financing.length) {
+    const finHtml = data.financing.map(f =>
+      `<div style="margin-bottom:4px">• <b>${f.date}</b> ${f.round} — ${f.amount}（投资方：${f.investment}）</div>`
+    ).join('');
+    html += `<div class="info-row"><div class="info-label">融资历程</div><div class="info-value">${finHtml}</div></div>`;
+  }
+
+  // ── 专利信息 ──
+  if (data.patents && data.patents.length) {
+    const patHtml = data.patents.map(p =>
+      `<div style="margin-bottom:4px">• <b>${p.title}</b><br><span style="color:#888;font-size:12px">${p.application_number} | ${p.kind_code_desc} | ${p.legal_status_desc} | ${p.application_date}</span></div>`
+    ).join('');
+    html += `<div class="info-row"><div class="info-label">专利（${data.patents.length}项）</div><div class="info-value">${patHtml}</div></div>`;
+  }
+
+  // ── 软著 ──
+  if (data.copyrights && data.copyrights.length) {
+    const cpHtml = data.copyrights.map(c => `• ${c.name}（${c.reg_number}，${c.reg_date}）`).join('<br>');
+    html += `<div class="info-row"><div class="info-label">软件著作权</div><div class="info-value">${cpHtml}</div></div>`;
+  }
+
+  // ── 参保人数历史 ──
+  if (data.headcount_history && Object.keys(data.headcount_history).length) {
+    const hcHtml = Object.entries(data.headcount_history).sort().map(([y,c]) => `${y}年:${c}人`).join(' → ');
+    html += `<div class="info-row"><div class="info-label">人员规模趋势</div><div class="info-value">${hcHtml}</div></div>`;
+  }
+
+  // ── 风险信息 ──
+  html += `<div class="info-row"><div class="info-label">风险信息</div><div class="info-value" style="color:${data.risk_info === '无风险记录' ? '#16a34a' : '#dc2626'}">${data.risk_info || '-'}</div></div>`;
 
   document.getElementById('companyInfo').innerHTML = html;
 }
@@ -585,6 +1619,9 @@ function startPolicySearch() {
   addLog('🧠 AI 智能搜索启动中...');
   status.textContent = 'AI 正在分析企业信息...';
 
+  // 重置思考面板
+  resetThinkingPanel();
+
   // 构建查询参数 — 传递企业完整信息
   const params = new URLSearchParams({
     company_name: currentCompany.company_name || '',
@@ -595,6 +1632,9 @@ function startPolicySearch() {
     registered_capital: currentCompany.registered_capital || '',
     employees: currentCompany.scale || '',
     founded: currentCompany.established_date || '',
+    address: currentCompany.registered_address || '',
+    business_scope: currentCompany.business_scope || '',
+    risk_info: currentCompany.risk_info || '',
   });
 
   // SSE 连接真实 API
@@ -606,6 +1646,8 @@ function startPolicySearch() {
 
     if (data.type === 'log') {
       addLog(data.message);
+      // 解析日志到思考面板
+      parseThinkingLog(data.message);
       // 只把关键步骤显示在状态栏，忽略警告类日志
       const msg = data.message;
       if (!msg.includes('timeout') && !msg.includes('WARNING') && !msg.includes('readiness')) {
@@ -743,32 +1785,46 @@ function renderSummary(policies) {
         <tr>
           <th style="width:30px;">#</th>
           <th>政策名称</th>
-          <th style="width:55px;">评分</th>
-          <th style="width:80px;">金额</th>
-          <th style="width:80px;">有效期</th>
+          <th style="width:45px;">综合</th>
+          <th style="width:35px;">💰</th>
+          <th style="width:35px;">🎯</th>
+          <th style="width:35px;">✅</th>
+          <th style="width:35px;">⏰</th>
+          <th style="width:70px;">金额</th>
         </tr>`;
 
     items.forEach((p, j) => {
       const score = p.relevance || 0;
       const scoreClass = score >= 70 ? 'score-high' : score >= 50 ? 'score-mid' : 'score-low';
       const title = p.title || p.policy_title || '未命名';
-      const shortTitle = title.length > 22 ? title.substring(0, 22) + '...' : title;
-      const validity = p.validity || '—';
+      const shortTitle = title.length > 18 ? title.substring(0, 18) + '...' : title;
       const amount = p.amount || '—';
+      const lvl = p.amount_level || '';
+      const sa = p.score_amount || 0;
+      const se = p.score_exclusivity || 0;
+      const sf = p.score_feasibility || 0;
+      const su = p.score_urgency || 0;
+      const ss = p.score_sustainability || 0;
+
+      // 小维度色彩
+      const dimColor = (v) => v >= 70 ? '#34a853' : v >= 50 ? '#f9a825' : v >= 30 ? '#e37400' : '#ea4335';
 
       html += `<tr>
         <td style="color:#999; font-size:12px;">${j + 1}</td>
         <td>
-          ${p.url ? `<a href="${p.url}" target="_blank" style="color:#333; text-decoration:none; font-size:13px;">${shortTitle}</a>` : `<span style="font-size:13px;">${shortTitle}</span>`}
+          ${p.url ? `<a href="${p.url}" target="_blank" style="color:#333; text-decoration:none; font-size:12px;" title="${title}">${shortTitle}</a>` : `<span style="font-size:12px;" title="${title}">${shortTitle}</span>`}
+          ${lvl ? `<span style="font-size:10px;padding:1px 4px;border-radius:3px;background:${lvl==='S'?'#fce8e8':lvl==='A'?'#fef3e0':lvl==='B'?'#e8f0fe':'#f0f0f0'};color:${lvl==='S'?'#c62828':lvl==='A'?'#e37400':lvl==='B'?'#1a73e8':'#999'};margin-left:4px;">${lvl}</span>` : ''}
         </td>
         <td>
-          <div style="display:flex; align-items:center; gap:4px;">
-            <span style="font-size:12px; font-weight:600; color:${score >= 70 ? '#34a853' : score >= 50 ? '#f9a825' : '#ea4335'};">${score}</span>
-            <div class="score-bar"><div class="score-fill ${scoreClass}" style="width:${score}%;"></div></div>
+          <div style="display:flex; align-items:center; gap:3px;">
+            <span style="font-size:13px; font-weight:700; color:${score >= 70 ? '#34a853' : score >= 50 ? '#f9a825' : '#ea4335'};">${score}</span>
           </div>
         </td>
-        <td style="font-size:12px; color:#1a73e8; font-weight:500;">${amount}</td>
-        <td class="validity-tag">${validity}</td>
+        <td style="font-size:11px; font-weight:600; color:${dimColor(sa)};">${sa}</td>
+        <td style="font-size:11px; font-weight:600; color:${dimColor(se)};">${se}</td>
+        <td style="font-size:11px; font-weight:600; color:${dimColor(sf)};">${sf}</td>
+        <td style="font-size:11px; font-weight:600; color:${dimColor(su)};">${su}</td>
+        <td style="font-size:11px; color:#1a73e8; font-weight:500;">${amount}</td>
       </tr>`;
     });
 
@@ -797,12 +1853,242 @@ function goBack() {
 function toggleLog() {
   const log = document.getElementById('searchLog');
   const toggle = document.getElementById('logToggle');
-  if (log.style.display === 'none') {
-    log.style.display = '';
+  if (log.classList.contains('hidden')) {
+    log.classList.remove('hidden');
     toggle.textContent = '▼';
   } else {
-    log.style.display = 'none';
+    log.classList.add('hidden');
     toggle.textContent = '▶';
+  }
+}
+
+// ──────────────────────────────────────
+// AI 思考过程面板
+// ──────────────────────────────────────
+let thinkingState = { searchTasks: [], searchProgress: [], round: 0 };
+
+function resetThinkingPanel() {
+  thinkingState = { searchTasks: [], searchProgress: [], round: 0 };
+  for (let i = 0; i <= 4; i++) {
+    const sec = document.getElementById('thinkSection' + i);
+    sec.className = 'thinking-section';
+    document.getElementById('thinkBadge' + i).textContent = '等待中';
+    document.getElementById('thinkBadge' + i).className = 'badge';
+    document.getElementById('thinkBody' + i).innerHTML = '';
+  }
+}
+
+function activateSection(n, badgeText) {
+  const sec = document.getElementById('thinkSection' + n);
+  sec.className = 'thinking-section active';
+  const badge = document.getElementById('thinkBadge' + n);
+  badge.textContent = badgeText || '进行中...';
+  badge.className = 'badge';
+}
+
+function completeSection(n, badgeText) {
+  const sec = document.getElementById('thinkSection' + n);
+  sec.className = 'thinking-section done';
+  const badge = document.getElementById('thinkBadge' + n);
+  badge.textContent = badgeText || '完成';
+  badge.className = 'badge done';
+}
+
+function addThinkingItem(sectionId, html) {
+  const body = document.getElementById('thinkBody' + sectionId);
+  body.innerHTML += html;
+}
+
+function parseThinkingLog(msg) {
+  // ── Section 0: 企业信息补全 ──
+  if (msg.includes('Step 0: 企业信息补全')) {
+    activateSection(0, '搜索中...');
+  }
+  if (msg.includes('搜索企业信息:')) {
+    const text = msg.replace(/.*搜索企业信息:\s*/, '');
+    addThinkingItem(0, `<div class="thinking-item"><span class="bullet">🔍</span><span class="text">${text.substring(0, 50)}</span></div>`);
+  }
+  if (msg.includes('📍 补充实际地址:')) {
+    const text = msg.replace(/.*📍 补充实际地址:\s*/, '');
+    addThinkingItem(0, `<div class="thinking-item"><span class="bullet">📍</span><span class="text"><b>实际地址</b>：${text}</span></div>`);
+  }
+  if (msg.includes('🔬 核心产品:')) {
+    const text = msg.replace(/.*🔬 核心产品:\s*/, '');
+    addThinkingItem(0, `<div class="thinking-item"><span class="bullet">🔬</span><span class="text"><b>核心产品</b>：${text}</span></div>`);
+  }
+  if (msg.includes('🏅 已获资质:')) {
+    const text = msg.replace(/.*🏅 已获资质:\s*/, '');
+    addThinkingItem(0, `<div class="thinking-item"><span class="bullet">🏅</span><span class="text"><b>已获资质</b>：${text}</span></div>`);
+  }
+  if (msg.includes('👤 创始人:')) {
+    const text = msg.replace(/.*👤 创始人:\s*/, '');
+    addThinkingItem(0, `<div class="thinking-item"><span class="bullet">👤</span><span class="text"><b>创始人</b>：${text}</span></div>`);
+  }
+  if (msg.includes('💰 融资:')) {
+    const text = msg.replace(/.*💰 融资:\s*/, '');
+    addThinkingItem(0, `<div class="thinking-item"><span class="bullet">💰</span><span class="text"><b>融资</b>：${text}</span></div>`);
+  }
+  if (msg.includes('💡 发现:')) {
+    const text = msg.replace(/.*💡 发现:\s*/, '');
+    addThinkingItem(0, `<div class="thinking-item"><span class="bullet">💡</span><span class="text"><b>发现</b>：${text}</span></div>`);
+  }
+  if (msg.includes('企业信息补全完成')) {
+    completeSection(0, '✓ 完成');
+  }
+  if (msg.includes('未获取到企业补充信息')) {
+    completeSection(0, '⚠️ 无补充');
+  }
+
+  // ── Section 1: 企业特征分析 ──
+  if (msg.includes('AI 正在分析企业信息')) {
+    activateSection(1, '分析中...');
+  }
+  // 特征逆向工程
+  if (msg.includes('📍 spatial:')) {
+    const text = msg.replace(/.*📍 spatial:\s*/, '');
+    addThinkingItem(1, `<div class="thinking-item"><span class="bullet">📍</span><span class="text"><b>空间载体</b>：${text}</span></div>`);
+  }
+  if (msg.includes('🏭 industry_chain:')) {
+    const text = msg.replace(/.*🏭 industry_chain:\s*/, '');
+    addThinkingItem(1, `<div class="thinking-item"><span class="bullet">🏭</span><span class="text"><b>产业链</b>：${text}</span></div>`);
+  }
+  if (msg.includes('🏷️ identity:') || msg.includes('🏷 identity:')) {
+    const text = msg.replace(/.*🏷.? identity:\s*/, '');
+    addThinkingItem(1, `<div class="thinking-item"><span class="bullet">🏷️</span><span class="text"><b>身份属性</b>：${text}</span></div>`);
+  }
+  if (msg.includes('👥 hr_dynamics:')) {
+    const text = msg.replace(/.*👥 hr_dynamics:\s*/, '');
+    addThinkingItem(1, `<div class="thinking-item"><span class="bullet">👥</span><span class="text"><b>人力资源</b>：${text}</span></div>`);
+  }
+  if (msg.includes('⚖️ compliance:') || msg.includes('⚖ compliance:')) {
+    const text = msg.replace(/.*⚖.? compliance:\s*/, '');
+    addThinkingItem(1, `<div class="thinking-item"><span class="bullet">⚖️</span><span class="text"><b>合规状态</b>：${text}</span></div>`);
+  }
+  if (msg.includes('📊 tax_financial:')) {
+    const text = msg.replace(/.*📊 tax_financial:\s*/, '');
+    addThinkingItem(1, `<div class="thinking-item"><span class="bullet">📊</span><span class="text"><b>税收与财务</b>：${text}</span></div>`);
+  }
+  if (msg.includes('🏆 talent_incentive:')) {
+    const text = msg.replace(/.*🏆 talent_incentive:\s*/, '');
+    addThinkingItem(1, `<div class="thinking-item"><span class="bullet">🏆</span><span class="text"><b>人才激励</b>：${text}</span></div>`);
+  }
+
+  // ── Section 2: 搜索策略 ──
+  if (msg.includes('生成') && msg.includes('个搜索任务')) {
+    completeSection(1, '✓ 完成');
+    activateSection(2, '生成策略');
+    const m = msg.match(/(\d+)\s*个搜索任务/);
+    if (m) addThinkingItem(2, `<div style="font-size:12px;color:#1a73e8;margin-bottom:6px;font-weight:600;">共 ${m[1]} 个搜索方向：</div>`);
+  }
+  // 搜索任务条目: "1. [空间载体→基础层] 🔴 张江高科技园区 管委会 专项资金"
+  const taskMatch = msg.match(/^\s*(\d+)\.\s*\[(.+?)→(.+?)\]\s*(🔴|🟡|🟢|⚪)\s*(.+)/);
+  if (taskMatch) {
+    const [, num, dim, layer, priority, term] = taskMatch;
+    const pColor = {'🔴':'#ea4335','🟡':'#fbbc04','🟢':'#34a853','⚪':'#999'}[priority] || '#999';
+    const layerBg = {'基础层':'#e8f0fe','发展层':'#e6f9e8','人才层':'#fef3e0','荣誉层':'#fce8e8'}[layer] || '#f0f0f0';
+    const layerColor = {'基础层':'#1a73e8','发展层':'#0d7a3f','人才层':'#e37400','荣誉层':'#c62828'}[layer] || '#666';
+    addThinkingItem(2, `
+      <div class="search-task-item">
+        <span class="priority-dot" style="background:${pColor}"></span>
+        <span class="dim-tag">${dim}</span>
+        <span class="layer-tag" style="background:${layerBg};color:${layerColor}">${layer}</span>
+        <span class="term">${term}</span>
+      </div>`);
+  }
+
+  // ── Section 3: 搜索进度 ──
+  if (msg.includes('Web Search') || msg.includes('Web搜索')) {
+    if (msg.includes('轮 Web Search')) {
+      const roundMatch = msg.match(/第\s*(\d+)\s*轮/);
+      if (roundMatch) {
+        thinkingState.round = parseInt(roundMatch[1]);
+        if (thinkingState.round === 1) {
+          completeSection(2, '✓ 完成');
+          activateSection(3, '搜索中...');
+        }
+        addThinkingItem(3, `<div style="font-size:12px;color:#1a73e8;margin:6px 0 4px;font-weight:600;">── 第 ${thinkingState.round} 轮搜索 ──</div>`);
+      }
+    }
+    // 单条搜索: "🔍 [1/7] Web搜索 [基础层]: 张江高科技园区..."
+    const searchMatch = msg.match(/🔍\s*\[(\d+)\/(\d+)\]\s*Web搜索\s*\[(.+?)\]:\s*(.+?)(?:\s+\(|$)/);
+    if (searchMatch) {
+      const [, cur, total, layer, term] = searchMatch;
+      const itemId = `search_${thinkingState.round}_${cur}`;
+      addThinkingItem(3, `
+        <div class="search-progress" id="${itemId}">
+          <span class="status-icon"><span class="mini-spinner"></span></span>
+          <span style="color:#999;font-size:11px;">[${cur}/${total}]</span>
+          <span class="term">${term.trim()}</span>
+        </div>`);
+      document.getElementById('thinkBadge3').textContent = `${cur}/${total}`;
+    }
+  }
+  // 搜索结果: "✅ 找到 3 条政策, 耗时 11.5s"
+  if (msg.includes('找到') && msg.includes('条政策')) {
+    const resultMatch = msg.match(/找到\s*(\d+)\s*条政策/);
+    // 更新最后一个搜索进度项的图标
+    const items = document.querySelectorAll('#thinkBody3 .search-progress');
+    if (items.length > 0) {
+      const lastItem = items[items.length - 1];
+      const icon = lastItem.querySelector('.status-icon');
+      const count = resultMatch ? resultMatch[1] : '?';
+      if (count === '0') {
+        icon.innerHTML = '<span style="color:#999">○</span>';
+      } else {
+        icon.innerHTML = `<span style="color:#34a853">✓</span>`;
+        lastItem.querySelector('.term').innerHTML += ` <span style="color:#34a853;font-size:11px;">+${count}条</span>`;
+      }
+    }
+  }
+  // 轮次汇总: "📊 第 1 轮: +10 条, 累计 10 条"
+  if (msg.includes('累计') && msg.includes('条')) {
+    const sumMatch = msg.match(/累计\s*(\d+)\s*条/);
+    if (sumMatch) {
+      addThinkingItem(3, `<div style="font-size:11px;color:#666;padding:2px 0;">📊 累计找到 ${sumMatch[1]} 条政策</div>`);
+    }
+  }
+
+  // ── Section 4: 评审 ──
+  if (msg.includes('轮评审')) {
+    activateSection(4, '评审中...');
+  }
+  // 维度覆盖
+  if (msg.includes('维度覆盖')) {
+    addThinkingItem(4, `<div style="font-size:12px;color:#1a73e8;margin:4px 0;font-weight:600;">维度覆盖：</div>`);
+  }
+  const covMatch = msg.match(/(✅|⚠️|❌|➖)\s*(.+?):\s*(sufficient|insufficient|missing|not_applicable)\s*\((\d+)条\)\s*(.*)/);
+  if (covMatch) {
+    const [, icon, dim, status, count, note] = covMatch;
+    const statusText = {'sufficient':'充足','insufficient':'不足','missing':'缺失','not_applicable':'不适用'}[status] || status;
+    const color = {'sufficient':'#0d7a3f','insufficient':'#e37400','missing':'#c62828','not_applicable':'#999'}[status] || '#666';
+    addThinkingItem(4, `<div class="thinking-item"><span class="bullet">${icon}</span><span class="text" style="color:${color}">${dim}：${statusText}（${count}条）${note ? '<span style="color:#999;font-size:11px"> ' + note + '</span>' : ''}</span></div>`);
+  }
+  // 质量评价
+  if (msg.includes('质量:')) {
+    const qMatch = msg.match(/(🟢|🟡|🔴|⚪)\s*质量:\s*(\w+)\s*[—-]\s*(.*)/);
+    if (qMatch) {
+      const [, icon, quality, reason] = qMatch;
+      addThinkingItem(4, `<div style="font-size:12px;margin:4px 0;">${icon} <b>质量: ${quality}</b> — ${reason}</div>`);
+    }
+  }
+  // 补充搜索
+  if (msg.includes('需要补充搜索')) {
+    const moreMatch = msg.match(/(\d+)\s*个任务/);
+    if (moreMatch) {
+      addThinkingItem(4, `<div style="font-size:12px;color:#e37400;margin:4px 0;">🔄 需要补充搜索 ${moreMatch[1]} 个方向</div>`);
+      completeSection(4, '需补充');
+    }
+  }
+  if (msg.includes('搜索质量达标') || msg.includes('搜索质量基本满足')) {
+    completeSection(4, '✓ 达标');
+  }
+
+  // ── 完成 ──
+  if (msg.includes('Orchestrator 完成')) {
+    completeSection(3, '✓ 完成');
+    if (document.getElementById('thinkBadge4').textContent === '等待中') {
+      completeSection(4, '✓ 完成');
+    }
   }
 }
 </script>
