@@ -41,7 +41,7 @@ class PolicyItem:
     pdf_url: str = ""            # PDF 下载链接
     industry: str = ""           # 适用行业
     full_text: str = ""          # 全文（深度模式才有）
-    layer: str = ""              # 业务层：基础层/发展层/人才层/荣誉层
+    layer: str = ""              # 政策分组：产业专项/税收优惠/资质认定/人才激励/用工补贴
     relevance: int = 0           # 综合评分（0-100，由5维度加权计算）
     score_amount: int = 0        # 💰 金额价值评分（0-100）
     score_exclusivity: int = 0   # 🎯 独占性评分（0-100）

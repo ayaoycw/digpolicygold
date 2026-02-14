@@ -431,10 +431,11 @@ body {
   font-weight: 600;
   white-space: nowrap;
 }
-.layer-基础层 { background: #e8f0fe; color: #1a73e8; }
-.layer-发展层 { background: #e6f9e8; color: #0d7a3f; }
-.layer-人才层 { background: #fef3e0; color: #e37400; }
-.layer-荣誉层 { background: #fce8e8; color: #c62828; }
+.layer-产业专项 { background: #e8f0fe; color: #1a73e8; }
+.layer-税收优惠 { background: #e6f9e8; color: #0d7a3f; }
+.layer-资质认定 { background: #fef3e0; color: #e37400; }
+.layer-人才激励 { background: #fce8e8; color: #c62828; }
+.layer-用工补贴 { background: #f3e8fe; color: #7b1fa2; }
 .validity-tag {
   font-size: 11px;
   color: #666;
@@ -550,7 +551,7 @@ body {
   <div class="card">
     <div class="card-title">🧠 智能搜索</div>
     <p style="font-size:13px; color:#666; margin-bottom:14px; line-height:1.5;">
-      AI 分析企业信息，自动拆分多层搜索任务（基础层、发展层、人才层、荣誉层），智能匹配政府奖励/扶持政策。
+      AI 分析企业信息，自动拆分 7 维度搜索任务，智能匹配产业专项/税收优惠/资质认定/人才激励/用工补贴 5 类政策。
     </p>
     <button class="btn btn-success" onclick="startPolicySearch()">🚀 开始智能搜索</button>
     <button class="btn btn-outline" style="margin-top:10px;" onclick="goBack()">← 重新查询</button>
@@ -647,10 +648,10 @@ body {
   <div class="card">
     <div class="card-title">📊 政策汇总排名</div>
     <p style="font-size:13px; color:#666; margin-bottom:8px; line-height:1.5;">
-      按业务层分组，5维度加权评分排序。
+      按政策类型分组（产业专项/税收优惠/资质认定/人才激励/用工补贴），5维度加权评分排序。
     </p>
     <div style="font-size:11px;color:#888;margin-bottom:12px;line-height:1.6;background:#f8f9fa;padding:8px 10px;border-radius:6px;">
-      💰金额价值(30%) · 🎯独占性(25%) · ✅可得性(20%) · ⏰紧迫性(15%) · 🔄持续性(10%)<br>
+      💰金额价值(30%) · 🎯独占性(25%) · ⏰紧迫性(25%) · ✅可得性(10%) · 🔄持续性(10%)<br>
       金额等级：<b style="color:#c62828">S</b>>500万 · <b style="color:#e37400">A</b>100-500万 · <b style="color:#1a73e8">B</b>20-100万 · C<20万
     </div>
     <div id="summaryContent"></div>
@@ -1758,7 +1759,7 @@ function renderPolicies(policies) {
 // 汇总表格（按层分组 + 排名）
 // ──────────────────────────────────────
 function renderSummary(policies) {
-  const layers = ['基础层', '发展层', '人才层', '荣誉层'];
+  const layers = ['产业专项', '税收优惠', '资质认定', '人才激励', '用工补贴'];
   const grouped = {};
   layers.forEach(l => grouped[l] = []);
   const ungrouped = [];
@@ -1985,8 +1986,8 @@ function parseThinkingLog(msg) {
   if (taskMatch) {
     const [, num, dim, layer, priority, term] = taskMatch;
     const pColor = {'🔴':'#ea4335','🟡':'#fbbc04','🟢':'#34a853','⚪':'#999'}[priority] || '#999';
-    const layerBg = {'基础层':'#e8f0fe','发展层':'#e6f9e8','人才层':'#fef3e0','荣誉层':'#fce8e8'}[layer] || '#f0f0f0';
-    const layerColor = {'基础层':'#1a73e8','发展层':'#0d7a3f','人才层':'#e37400','荣誉层':'#c62828'}[layer] || '#666';
+    const layerBg = {'产业专项':'#e8f0fe','税收优惠':'#e6f9e8','资质认定':'#fef3e0','人才激励':'#fce8e8','用工补贴':'#f3e8fe'}[layer] || '#f0f0f0';
+    const layerColor = {'产业专项':'#1a73e8','税收优惠':'#0d7a3f','资质认定':'#e37400','人才激励':'#c62828','用工补贴':'#7b1fa2'}[layer] || '#666';
     addThinkingItem(2, `
       <div class="search-task-item">
         <span class="priority-dot" style="background:${pColor}"></span>

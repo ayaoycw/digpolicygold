@@ -34,6 +34,7 @@ import os
 import re
 import sys
 import time
+from datetime import datetime
 from dataclasses import dataclass, field, asdict
 from typing import Optional
 
@@ -52,7 +53,11 @@ logger = logging.getLogger(__name__)
 # 默认 Instructions（要求输出链接、PDF）
 # ─────────────────────────────────────────────
 
-DEFAULT_POLICY_INSTRUCTIONS = """你是一个专业的政策研究助手。请根据搜索结果，尽可能完整地提取和呈现政策信息。
+def _build_policy_instructions() -> str:
+    """动态生成搜索 instructions，注入当前日期"""
+    today = datetime.now().strftime("%Y-%m-%d")
+    current_year = datetime.now().strftime("%Y")
+    return f"""你是一个专业的政策研究助手。当前日期为 {today}。请根据搜索结果，尽可能完整地提取和呈现政策信息。
 
 要求：
 1. 提供每条政策的完整标题、发文字号、发布日期、发布机构
@@ -62,22 +67,26 @@ DEFAULT_POLICY_INSTRUCTIONS = """你是一个专业的政策研究助手。请�
 5. 如果有PDF下载链接，也要列出
 6. 标注每条政策适用的行业范围
 7. 搜索尽可能多的相关来源，广泛覆盖政府官网、政策库等渠道
+8. 优先返回当前仍在有效期内的政策。已关闭申报窗口的年度性申报通知不要返回。疫情等临时性政策除非明确延续至{current_year}年否则不返回。
+9. 从原文中提取“有效期至”、“实施期限”、“申报截止日期”等信息，填入 validity 和 application_deadline 字段
 
 输出格式要求（严格JSON，不要输出其他文字）：
-{
+{{
   "policies": [
-    {
+    {{
       "title": "政策完整标题",
       "source": "发布机构",
       "url": "官网原文链接",
       "pdf_url": "PDF下载链接（没有则留空）",
       "date": "发布日期",
+      "validity": "有效期截止日期（如'2025-12-31'；长期有效填'长期'；找不到填'未知'）",
+      "application_deadline": "申报截止日期（如有，否则留空）",
       "summary": "政策摘要（包含具体数字和比例）",
       "support": "关键扶持内容（资金额度、补贴比例等）",
       "industry": "适用行业"
-    }
+    }}
   ]
-}"""
+}}"""
 
 
 # ─────────────────────────────────────────────
@@ -111,7 +120,7 @@ class WebSearchWorker(BaseWorker):
         self.model_deployment = model_deployment or os.environ.get("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o")
         self.api_version = api_version
         self.search_context_size = search_context_size  # "low" | "medium" | "high"
-        self.instructions = instructions or DEFAULT_POLICY_INSTRUCTIONS
+        self.instructions = instructions or _build_policy_instructions()
 
         # 从 project endpoint 提取 OpenAI endpoint
         project_endpoint = endpoint or os.environ.get("AZURE_AI_PROJECT_ENDPOINT", "")
@@ -256,6 +265,8 @@ class WebSearchWorker(BaseWorker):
                         support=p.get("support") or p.get("key_support", ""),
                         pdf_url=p.get("pdf_url", ""),
                         industry=p.get("industry") or p.get("applicable_industry", ""),
+                        validity=p.get("validity", ""),
+                        application_deadline=p.get("application_deadline", ""),
                     ))
                 if items:
                     return items
